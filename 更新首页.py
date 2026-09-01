@@ -1,5 +1,5 @@
 # 更新首页.py —— 把最新一期发布到 docs/，供 GitHub Pages（main /docs）部署
-# 产物：docs/index.html（最新一期副本）+ docs/img/（配图压缩为 JPEG，仅 docs 内；img/ 原图不动）
+# 产物：docs/index.html（最新一期副本）+ docs/img/（配图压缩为 JPEG，仅 docs 内；img/ 原图不动）+ docs/css/site.css（样式表副本）
 # 出刊后运行：python 更新首页.py
 import re
 import shutil
@@ -52,8 +52,17 @@ for old, new in renamed.items():
     html = html.replace(old, new)
 (site / "index.html").write_text(html, encoding="utf-8")
 
+# 样式表：报纸 HTML 引用 <link href="css/site.css">，发布时一并带上
+root_css = root / "css" / "site.css"
+if root_css.is_file():
+    (site / "css").mkdir(exist_ok=True)
+    shutil.copyfile(root_css, site / "css" / "site.css")
+elif (site / "css").is_dir():
+    shutil.rmtree(site / "css")  # 样式表不存在就不留旧副本
+
 saved = sum(p.stat().st_size for p in site_img.rglob("*")) if site_img.is_dir() else 0
 print(
     f"docs/index.html ← {latest.name}（本地共 {len(issues)} 期，"
-    f"配图压缩 {len(renamed)} 张 PNG→JPEG，docs/img 共 {saved // 1024} KB）"
+    f"配图压缩 {len(renamed)} 张 PNG→JPEG，docs/img 共 {saved // 1024} KB，"
+    f"样式 {'docs/css/site.css' if root_css.is_file() else '内嵌'}）"
 )

@@ -2,6 +2,14 @@
 
 **读的人**：主编（排版与生图）、`fetch-poster`（登记图注口径）、`image-check`（判人像与廉价感）。
 
+## 样式表（改外观只改这一个文件）
+
+全刊样式在 **`css/site.css`**；每期见报 HTML 的 `<head>` 里只留一行 `<link rel="stylesheet" href="css/site.css" />`，**不许把选择器或尺寸抄回内嵌 `<style>`**。字体、颜色变量、栏宽、`.flow` 列数、图片灰度、表格线都在这张表里改。
+
+新增一期：照上期的 `<head>` 结构复制（含那行 `<link>`），只改 `<title>` 与报头文字，不要重新手搓 CSS。版面导出脚本会在导出时自动把这张表内联进临时页面，所以改完 `css/site.css` 不必改任何脚本。
+
+**改纸宽要连改两处**（同一文件内）：`.page{width:min(<N>px,…)}` 与 `.flow`／`.flow.n2`／`.flow.n4` 的 `column-count`——否则纸变宽了、6 栏却还按旧宽度排。`rules/page-size.md` 的纸宽数字同步跟上。
+
 ## 字体与文本样式
 
 中文 Noto Serif SC；西文与数字正文 Source Serif 4；标题 Newsreader（字体栈里写在 Noto 之前，别让西文被中文字体接管）；眉题、导航、导读、脚注用 Libre Franklin。正文首行缩进约两字，两端对齐，字距为零。
@@ -24,4 +32,4 @@
 
 ## 版式类名（沿用既有 HTML，别另造一套）
 
-`.page` 一版、`.kicker` 眉题／栏目条、`.hed` 标题、`.deck` 导读、`.by` 署名、`.q` 引语块、`.tl` 时间线、`.ni` 简讯、`.box`／`.ed` 侧栏与编者按、`.src-note` 出处与缺失交代、`.jump` 跳转。
+`.page` 一版、`.kicker` 眉题／栏目条、`.hed` 标题、`.deck` 导读、`.by` 署名、`.q` 引语块、`.tl` 时间线、`.ni` 简讯、`.box`／`.ed` 侧栏与编者按、`.src-note` 出处与缺失交代、`.jump` 跳转。完整选择器与它们的尺寸只在 `css/site.css` 里，本条只列名字供写稿时引用。

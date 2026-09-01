@@ -1,14 +1,20 @@
-# 星期时报 · The Monday Times
+# Qwen Code 办报工作流 · AI Newsroom
+
+> 示例报纸：**星期时报 · The Monday Times**
 
 > **一个人 + Qwen Code = 一间报社。**
 > 说一声「出今日报纸」，AI 主编自动派出一支子代理团队：取材的、配图的、校对的、排版的——六步之后，一份《纽约时报》风格的中文大报在你的浏览器里成型，GitHub Pages 全球发行。
 
-![Qwen Code](https://img.shields.io/badge/powered%20by-Qwen%20Code-blue)
-![Agents](https://img.shields.io/badge/subagents-4-orange)
-![Lines](https://img.shields.io/badge/新闻线-4-red)
-![Pages](https://img.shields.io/badge/GitHub%20Pages-auto-green)
+<p align="center">
+  <img src="https://img.shields.io/badge/powered%20by-Qwen%20Code-blue" alt="Qwen Code">
+  <img src="https://img.shields.io/badge/subagents-4-orange" alt="Agents">
+  <img src="https://img.shields.io/badge/%E6%96%B0%E9%97%BB%E7%BA%BF-4-red" alt="Lines">
+  <img src="https://img.shields.io/badge/GitHub%20Pages-auto-green" alt="Pages">
+</p>
 
-**在线看最新一期** → <https://zhiqiangbao.github.io/qwen-code-newsroom/>
+<p align="center">
+  <a href="https://zhiqiangbao.github.io/qwen-code-newsroom/"><img src="https://img.shields.io/badge/%F0%9F%93%B0_%E5%9C%A8%E7%BA%BF%E7%9C%8B%E6%9C%80%E6%96%B0%E4%B8%80%E6%9C%9F-Read%20the%20Latest%20Issue-black?style=for-the-badge&labelColor=1a1a1a&color=d4380d" alt="在线看最新一期"></a>
+</p>
 
 ---
 

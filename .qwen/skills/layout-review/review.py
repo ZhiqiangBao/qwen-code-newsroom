@@ -14,6 +14,21 @@ from pathlib import Path
 PAGE_W = 912
 WINDOW_H = 3600
 SCALE = 2
+PAPER = "#f4f1ea"
+PAGE_CSS = re.compile(r"\.page\s*\{[^}]*?width:\s*min\(\s*(\d+)px", re.S)
+PAPER_CSS = re.compile(r"--paper\s*:\s*(#[0-9a-fA-F]{3,8})")
+
+
+def detect_page(html: str, fallback_w: int, fallback_paper: str) -> tuple[int, str]:
+    """Read page width and paper colour from the newspaper's own CSS.
+
+    Standards live in rules/ (R5) and are baked into the HTML by the editor; the
+    exporter must not carry a second copy of them.
+    """
+    m = PAGE_CSS.search(html)
+    width = int(m.group(1)) if m else fallback_w
+    p = PAPER_CSS.search(html)
+    return width, (p.group(1) if p else fallback_paper)
 
 
 def find_edge() -> Path:
@@ -38,7 +53,7 @@ def latest_html(root: Path) -> Path:
     return files[-1]
 
 
-def split_pages(html: str, html_path: Path) -> list[tuple[str, str]]:
+def split_pages(html: str, html_path: Path, page_w: int, paper: str) -> list[tuple[str, str]]:
     marker = '<section class="page"'
     idxs: list[int] = []
     pos = 0
@@ -58,8 +73,8 @@ def split_pages(html: str, html_path: Path) -> list[tuple[str, str]]:
     extra = (
         f'<base href="{src_uri}">'
         "<style>body{background:#00ff00 !important;margin:0 !important}"
-        f".page{{width:{PAGE_W}px !important;margin:0 !important;box-shadow:none !important;"
-        "padding:14px 26px 22px !important;background:#f4f1ea !important}}</style>"
+        f".page{{width:{page_w}px !important;margin:0 !important;box-shadow:none !important;"
+        f"padding:14px 26px 22px !important;background:{paper} !important}}</style>"
     )
     head = head.replace("</head>", extra + "</head>")
     pages: list[tuple[str, str]] = []
@@ -76,7 +91,7 @@ def split_pages(html: str, html_path: Path) -> list[tuple[str, str]]:
     return pages
 
 
-def screenshot(edge: Path, src_html: Path, out_png: Path) -> None:
+def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: int) -> None:
     uri = src_html.resolve().as_uri()
     subprocess.run(
         [
@@ -86,9 +101,9 @@ def screenshot(edge: Path, src_html: Path, out_png: Path) -> None:
             "--hide-scrollbars",
             "--no-first-run",
             "--disable-extensions",
-            f"--force-device-scale-factor={SCALE}",
+            f"--force-device-scale-factor={scale}",
             "--virtual-time-budget=20000",
-            f"--window-size={PAGE_W},{WINDOW_H}",
+            f"--window-size={page_w},{WINDOW_H}",
             f"--screenshot={out_png}",
             uri,
         ],
@@ -153,6 +168,8 @@ def main() -> int:
     parser.add_argument("--html", default="")
     parser.add_argument("--pages", default="")
     parser.add_argument("--output", default="")
+    parser.add_argument("--width", type=int, default=0, help="页宽 px；默认从 HTML 的 .page CSS 读取")
+    parser.add_argument("--scale", type=int, default=0, help="导出倍率；默认取脚本内 SCALE")
     args = parser.parse_args()
 
     root = Path.cwd()
@@ -165,7 +182,12 @@ def main() -> int:
     out_dir = Path(args.output).resolve() if args.output else root / "desk" / "版面" / html_path.stem
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    pages = split_pages(html_path.read_text(encoding="utf-8"), html_path)
+    raw_html = html_path.read_text(encoding="utf-8")
+    page_w, paper = detect_page(raw_html, PAGE_W, PAPER)
+    if args.width:
+        page_w = args.width
+    scale = args.scale or SCALE
+    pages = split_pages(raw_html, html_path, page_w, paper)
     if want:
         pages = [(sid, doc) for sid, doc in pages if sid.lower() in want]
     if not pages:
@@ -181,7 +203,7 @@ def main() -> int:
             src = tmp_path / f"{sid}.html"
             raw = tmp_path / f"{sid}.raw.png"
             src.write_text(doc, encoding="utf-8")
-            screenshot(edge, src, raw)
+            screenshot(edge, src, raw, page_w, scale)
             dest = out_dir / f"{i:02d}_{sid.upper()}.png"
             if not raw.is_file():
                 print(json.dumps({"ok": False, "error": f"screenshot failed: {sid}"}, ensure_ascii=False))
@@ -192,7 +214,15 @@ def main() -> int:
             dest.write_bytes(raw.read_bytes())
             exported.append(dest.name)
 
-    payload = {"ok": True, "dir": str(out_dir), "n": len(exported), "pages": exported}
+    payload = {
+        "ok": True,
+        "dir": str(out_dir),
+        "n": len(exported),
+        "pages": exported,
+        "page_width_px": page_w,
+        "scale": scale,
+        "expect_png_width_px": page_w * scale,
+    }
     if warnings:
         payload["warnings"] = warnings
     print(json.dumps(payload, ensure_ascii=False))

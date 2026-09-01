@@ -1,20 +1,29 @@
+<div align="center">
+
+<img src="https://img.shields.io/badge/THE%20MONDAY%20TIMES-%E7%A4%BA%E4%BE%8B%E6%8A%A5%E7%BA%B8%20%C2%B7%20%E6%98%9F%E6%9C%9F%E6%97%B6%E6%8A%A5-d4380d?style=for-the-badge&labelColor=1a1a1a" alt="示例报纸：星期时报 The Monday Times">
+
 # Qwen Code 办报工作流 · AI Newsroom
 
-> 示例报纸：**星期时报 · The Monday Times**
+**一个人 + Qwen Code = 一间报社。**
+说一声「出今日报纸」，AI 主编自动派出一支子代理团队：取材的、配图的、校对的、排版的——六步之后，一份《纽约时报》风格的中文大报在你的浏览器里成型，GitHub Pages 全球发行。
 
-> **一个人 + Qwen Code = 一间报社。**
-> 说一声「出今日报纸」，AI 主编自动派出一支子代理团队：取材的、配图的、校对的、排版的——六步之后，一份《纽约时报》风格的中文大报在你的浏览器里成型，GitHub Pages 全球发行。
+<img src="https://img.shields.io/badge/powered%20by-Qwen%20Code-blue" alt="Qwen Code">&nbsp;&nbsp;
+<img src="https://img.shields.io/badge/subagents-4-orange" alt="Agents">&nbsp;&nbsp;
+<img src="https://img.shields.io/badge/%E6%96%B0%E9%97%BB%E7%BA%BF-4-red" alt="Lines">&nbsp;&nbsp;
+<img src="https://img.shields.io/badge/GitHub%20Pages-auto-green" alt="Pages">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/powered%20by-Qwen%20Code-blue" alt="Qwen Code">
-  <img src="https://img.shields.io/badge/subagents-4-orange" alt="Agents">
-  <img src="https://img.shields.io/badge/%E6%96%B0%E9%97%BB%E7%BA%BF-4-red" alt="Lines">
-  <img src="https://img.shields.io/badge/GitHub%20Pages-auto-green" alt="Pages">
-</p>
+<br>
 
-<p align="center">
-  <a href="https://zhiqiangbao.github.io/qwen-code-newsroom/"><img src="https://img.shields.io/badge/%F0%9F%93%B0_%E5%9C%A8%E7%BA%BF%E7%9C%8B%E6%9C%80%E6%96%B0%E4%B8%80%E6%9C%9F-Read%20the%20Latest%20Issue-black?style=for-the-badge&labelColor=1a1a1a&color=d4380d" alt="在线看最新一期"></a>
-</p>
+<a href="https://zhiqiangbao.github.io/qwen-code-newsroom/">
+  <table align="center" role="presentation" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td bgcolor="#1a1a1a" align="center" valign="middle" width="72"><img src="assets/cover.png" width="56" height="56" alt="星期时报封面"></td>
+      <td bgcolor="#d4380d" valign="middle" align="left"><font color="#ffffff">&nbsp;&nbsp;<b>在线看最新一期</b>&nbsp;·&nbsp;Read the Latest Issue&nbsp;&nbsp;</font></td>
+    </tr>
+  </table>
+</a>
+
+</div>
 
 ---
 

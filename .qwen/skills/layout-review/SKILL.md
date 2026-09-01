@@ -24,7 +24,7 @@ python ".qwen/skills/layout-review/review.py" --html "<rules/disk.md『见报』
 4. 裁掉底部哨兵绿；整窗都不绿则该版回一条 warning（撞到窗口高＝溢出）。
 5. 顺带量好每张 PNG 的像素与高宽比，省掉调用方第二次跑 Python。
 
-## 回吐的 JSON
+## 回吐的 JSON（下面的数字是**示例**，实际值随 `css/site.css` 的纸宽与 `--scale` 变，不要当合格线抄走）
 
 ```json
 {"ok": true, "dir": "…", "n": 2, "pages": ["01_A1.png", "02_C1.png"],

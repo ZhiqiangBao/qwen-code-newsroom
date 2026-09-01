@@ -47,7 +47,7 @@
 **设计词汇（每期自由挑用，可同版混用）**：
 
 - 栏式：`.flow`（3 栏）、`.flow.n2`（2 栏）、`.flow.n4`（4 栏）。
-- 图：`figure.wrap`（文字绕排）、`figure.wide`（通栏）、`figure.poster`（海报完整不裁）、`figcaption`。
+- 图：`figure.wrap`（绕排，完整不裁）、`figure.poster`（海报位右浮，完整不裁）、`figure.wide`（通栏；裸 `figure img` 与 2 栏里的 `figure.wide` 会按高度裁切，海报剧照别用这两者）、`figcaption`。
 - 标题与导语：`.kicker` 眉题／栏目条、`.hed` 标题、字号档 `.xxl`／`.xl`／`.l`／`.m`／`.s`、`.deck` 导读、`.leadhead`、`.drop` 首字下沉、`.lede`、`.feil` 报眉条、`.by` 署名。
 - 结构化件：`.tl` 时间线、`.q` 引语块、`.box` 侧栏、`.ed` 编者按框（内含 `.cols`／`.sig`）、`table.stat`（`td.n` 为数字列）、`.idx` 索引、`.mini` 小字块、`.ni` 简讯、`.band` 分段带。
 - 线与空隙：`.hair` 细线、`.dbl` 双线、`.vr` 竖线、`.clear` 清除浮动、`.rule`。

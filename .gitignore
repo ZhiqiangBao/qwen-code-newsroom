@@ -1,0 +1,26 @@
+# Python 缓存
+__pycache__/
+*.pyc
+
+# image_gen 中间产物（出图后已 copy 进 img/，不入库）
+.qwen/generated-images/
+
+# 子代理临时脚本
+.qwen/tmp/
+
+# Windows 本地产物
+desktop.ini
+
+# 本机便利脚本（含绝对路径，别人跑不通）
+打开最新.vbs
+
+# 日期版报纸不进仓库；出刊后跑「更新首页.py」生成 index.html 上传
+/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html
+
+# 小红书/微信推流脚本与产物，不属于办报流程
+export_social.py
+export/
+
+# 历史工作底稿，不公开
+/qwen/
+9.1流程跑通问题总结.md

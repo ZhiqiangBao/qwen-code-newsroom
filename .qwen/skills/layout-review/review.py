@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""Split newspaper HTML by page and screenshot each section with Edge. No VL."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+PAGE_W = 912
+WINDOW_H = 3600
+SCALE = 2
+
+
+def find_edge() -> Path:
+    env = os.environ
+    candidates = [
+        Path(env.get("ProgramFiles(x86)", r"C:\Program Files (x86)"))
+        / "Microsoft/Edge/Application/msedge.exe",
+        Path(env.get("ProgramFiles", r"C:\Program Files"))
+        / "Microsoft/Edge/Application/msedge.exe",
+        Path(env.get("LOCALAPPDATA", "")) / "Microsoft/Edge/Application/msedge.exe",
+    ]
+    for p in candidates:
+        if p.is_file():
+            return p
+    raise SystemExit("msedge.exe not found")
+
+
+def latest_html(root: Path) -> Path:
+    files = sorted(root.glob("20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html"))
+    if not files:
+        raise SystemExit("no YYYY-MM-DD.html in project root")
+    return files[-1]
+
+
+def split_pages(html: str, html_path: Path) -> list[tuple[str, str]]:
+    marker = '<section class="page"'
+    idxs: list[int] = []
+    pos = 0
+    while True:
+        found = html.find(marker, pos)
+        if found < 0:
+            break
+        idxs.append(found)
+        pos = found + 1
+    head_end = html.find("<body>")
+    if head_end < 0:
+        raise SystemExit("HTML missing <body>")
+    head = re.sub(r'(?s)<nav class="nav">.*?</nav>', "", html[:head_end])
+    src_uri = html_path.parent.resolve().as_uri()
+    if not src_uri.endswith("/"):
+        src_uri += "/"
+    extra = (
+        f'<base href="{src_uri}">'
+        "<style>body{background:#00ff00 !important;margin:0 !important}"
+        f".page{{width:{PAGE_W}px !important;margin:0 !important;box-shadow:none !important;"
+        "padding:14px 26px 22px !important;background:#f4f1ea !important}}</style>"
+    )
+    head = head.replace("</head>", extra + "</head>")
+    pages: list[tuple[str, str]] = []
+    for i, start in enumerate(idxs):
+        end = idxs[i + 1] if i + 1 < len(idxs) else html.find("</html>")
+        sec = html[start:end]
+        close = sec.find("</section>")
+        if close < 0:
+            continue
+        sec = sec[: close + len("</section>")]
+        m = re.search(r'id="([a-zA-Z0-9_-]+)"', sec)
+        sid = m.group(1) if m else f"p{i + 1}"
+        pages.append((sid, head + "<body>" + sec + "</body></html>"))
+    return pages
+
+
+def screenshot(edge: Path, src_html: Path, out_png: Path) -> None:
+    uri = src_html.resolve().as_uri()
+    subprocess.run(
+        [
+            str(edge),
+            "--headless=new",
+            "--disable-gpu",
+            "--hide-scrollbars",
+            "--no-first-run",
+            "--disable-extensions",
+            f"--force-device-scale-factor={SCALE}",
+            "--virtual-time-budget=20000",
+            f"--window-size={PAGE_W},{WINDOW_H}",
+            f"--screenshot={out_png}",
+            uri,
+        ],
+        check=False,
+        capture_output=True,
+    )
+
+
+def crop_sentinel(png_path: Path) -> str | None:
+    """Crop green sentinel. Return a warning string if the page looks taller than the window."""
+    from PIL import Image
+
+    with Image.open(png_path) as src:
+        im = src.convert("RGB")
+    w, h = im.size
+    px = im.load()
+    bg = px[w // 2, h - 2]
+    if bg[1] < 200 or bg[0] > 80 or bg[2] > 80:
+        return f"{png_path.name} 底部不是哨兵绿，版面可能高于窗口"
+    warn = None
+
+    def row_ink(y: int) -> bool:
+        for x in range(0, w, 16):
+            r, g, b = px[x, y]
+            if abs(r - bg[0]) > 12 or abs(g - bg[1]) > 12 or abs(b - bg[2]) > 12:
+                return True
+        return False
+
+    hit = -1
+    for y in range(h - 1, -1, -4):
+        if row_ink(y):
+            hit = y
+            break
+    if hit < 0:
+        im.close()
+        return warn
+    bottom = hit
+    for y in range(min(h - 1, hit + 4), hit, -1):
+        if row_ink(y):
+            bottom = y
+            break
+    cut = min(h, max(200, bottom + 1))
+    cropped = im.crop((0, 0, w, cut))
+    im.close()
+    cropped.save(png_path)
+    cropped.close()
+    return warn
+
+
+def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        from PIL import Image  # noqa: F401
+    except ImportError:
+        print(json.dumps({"ok": False, "error": "需要 pillow"}, ensure_ascii=False))
+        return 1
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--html", default="")
+    parser.add_argument("--pages", default="")
+    parser.add_argument("--output", default="")
+    args = parser.parse_args()
+
+    root = Path.cwd()
+    html_path = Path(args.html).resolve() if args.html else latest_html(root)
+    if not html_path.is_file():
+        print(json.dumps({"ok": False, "error": f"missing html: {html_path}"}, ensure_ascii=False))
+        return 1
+
+    want = {p.strip().lower() for p in args.pages.split(",") if p.strip()}
+    out_dir = Path(args.output).resolve() if args.output else root / "desk" / "版面" / html_path.stem
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    pages = split_pages(html_path.read_text(encoding="utf-8"), html_path)
+    if want:
+        pages = [(sid, doc) for sid, doc in pages if sid.lower() in want]
+    if not pages:
+        print(json.dumps({"ok": False, "error": "no matching pages"}, ensure_ascii=False))
+        return 1
+
+    edge = find_edge()
+    exported: list[str] = []
+    warnings: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="layout-export-") as tmp:
+        tmp_path = Path(tmp)
+        for i, (sid, doc) in enumerate(pages, 1):
+            src = tmp_path / f"{sid}.html"
+            raw = tmp_path / f"{sid}.raw.png"
+            src.write_text(doc, encoding="utf-8")
+            screenshot(edge, src, raw)
+            dest = out_dir / f"{i:02d}_{sid.upper()}.png"
+            if not raw.is_file():
+                print(json.dumps({"ok": False, "error": f"screenshot failed: {sid}"}, ensure_ascii=False))
+                return 1
+            note = crop_sentinel(raw)
+            if note:
+                warnings.append(f"{sid}: {note}")
+            dest.write_bytes(raw.read_bytes())
+            exported.append(dest.name)
+
+    payload = {"ok": True, "dir": str(out_dir), "n": len(exported), "pages": exported}
+    if warnings:
+        payload["warnings"] = warnings
+    print(json.dumps(payload, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

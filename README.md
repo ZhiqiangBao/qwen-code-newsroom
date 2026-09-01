@@ -143,18 +143,11 @@ pip install pillow
 
 版面截图脚本调用本机 **Microsoft Edge**（无头模式），Windows 自带即可；非 Windows 需自行改 `review.py` 里的浏览器路径。
 
-### 4. 建你自己的报纸仓库
-
-在本仓库页面点上方绿色 **Use this template → Create a new repository**（或先 Fork），生成一个属于你的空仓库：
-
-- 仓库名随意（如 `my-news`），下文用 `你的仓库名` 指代
-- 可见性选 **Public**（免费版 Pages 要求）
-
-克隆到本地：
+### 4. 克隆本仓库
 
 ```bash
-git clone https://github.com/你的用户名/你的仓库名.git
-cd 你的仓库名
+git clone https://github.com/ZhiqiangBao/qwen-code-newsroom.git
+cd qwen-code-newsroom
 ```
 
 ### 5. 办报
@@ -169,19 +162,32 @@ qwen
 
 ### 6. 发行
 
-每期出刊后，把最新一期发布到 `docs/` 并推送——`docs/` 就是 Pages 的站点根：
+每期出刊后先跑 `python 更新首页.py`，最新一期就进了 `docs/`。
+
+然后建你自己的仓库：打开 <https://github.com/new>，填仓库名（如 `my-news`），可见性选 **Public**（免费版 Pages 要求），**不要勾选** "Add a README file" 等任何初始化选项，点 Create repository。
+
+建好后，把 `docs` 文件夹推上去。先打开终端并进入 `docs`，三种方法任选其一：
+
+1. **地址栏**：进入 `docs` 文件夹，在文件资源管理器顶部地址栏输入 `powershell` 回车
+2. **右键**：进入 `docs` 文件夹，在空白处按住 Shift 右键（Win11 直接右键选「在终端中打开」），选择「在此处打开 PowerShell 窗口」
+3. **命令切换**：先随便打开 PowerShell，再用 `cd` 命令切过去，如 `cd C:\Users\你的用户名\Desktop\qwen-code-newsroom\docs`（macOS/Linux 用终端，如 `cd ~/项目/qwen-code-newsroom/docs`）
+
+确认提示符当前目录是 `docs` 后，逐行执行：
 
 ```bash
-python 更新首页.py          # 最新一期 → docs/index.html，同步 docs/img/
-git add docs
-git commit -m "issue: 2026-09-07"
-git push
+git init                                        # 把 docs 变成本地 git 仓库
+git remote add origin https://github.com/你的用户名/my-news.git  # 关联到刚建的新仓库
+git add -A                                      # 收集 docs 里的全部文件
+git commit -m "issue: 2026-09-07"               # 打包成一次提交
+git push -u origin main                         # 推送到 GitHub
 ```
 
-再到仓库 **Settings → Pages**，Source 选 **Deploy from a branch**，分支 `main`、目录选 **`/docs`**，保存。报纸全用相对路径，无构建、无依赖，之后每次跑脚本再推送即自动更新。你的报纸地址：
+> `cd docs` 的意思是「进入 docs 文件夹」。git 只对当前所在目录生效，所以必须先站在 `docs` 里再执行上面这些命令，推上去的就只有报纸页面和配图，不含办报工作流文件。首次 push 会弹浏览器登录 GitHub 授权，跟着提示走即可。
+
+再到你的仓库 **Settings → Pages**，Source 选 **Deploy from a branch**，分支 `main`、目录 **`/`（根目录）**，保存。以后每期重复：跑脚本 → 进 `docs` → add / commit / push，报纸自动更新。你的报纸地址：
 
 ```
-https://你的用户名.github.io/你的仓库名/
+https://你的用户名.github.io/my-news/
 ```
 
 ## 仓库地图

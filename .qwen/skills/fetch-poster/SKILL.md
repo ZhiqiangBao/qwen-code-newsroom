@@ -6,7 +6,8 @@ priority: 30
 
 # 官方成图下载
 
-目标：拿到**片方／平台／机构放出的公开成图**（海报、剧照、主视觉、现场照），做成黑白上版，图注写「公开资料」。
+目标：拿到**片方／平台／机构放出的公开成图**（海报、剧照、主视觉、现场照）。本技能只管**怎么把图弄到手并验真**；什么图能上版、黑白处理、图注口径、哪些必须留给 `image_gen`，一律见 `rules/visual.md`（R4）；落盘目录与写盘、下载命令写法见 `rules/disk.md`（R6）「见报图」行。本文件不重复规定。
+
 拿不到就交给 `image_gen`。**最多试 3 个直链，不成就停手**——这是省时间的全部关键。
 
 ## 第 1 步：找图片直链（别在正文里翻）
@@ -29,10 +30,10 @@ Select-String -InputObject $html -Pattern '<meta[^>]+(og:image|twitter:image)[^>
 
 ```powershell
 $hdr = @{'Referer'='<第1步那个文章页URL>'; 'User-Agent'='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'}
-Invoke-WebRequest -Uri '<图片直链>' -OutFile 'img\2026-09-01\st-movie.jpg' -UseBasicParsing -TimeoutSec 25 -Headers $hdr
+Invoke-WebRequest -Uri '<图片直链>' -OutFile 'img\YYYY-MM-DD\st-movie.jpg' -UseBasicParsing -TimeoutSec 25 -Headers $hdr
 ```
 
-- 目录先建：`mkdir "img\2026-09-01"`
+- 目录先建：`mkdir "img\YYYY-MM-DD"`
 - 文件名只用英文或拼音，海报 `st-`、剧照 `ju-`、主视觉 `kv-` 开头。
 - 一次失败就换下一个直链。**不要重试同一个，不要换 UA 再赌。**
 
@@ -41,7 +42,7 @@ Invoke-WebRequest -Uri '<图片直链>' -OutFile 'img\2026-09-01\st-movie.jpg' -
 下回来的经常是 403 错误页或占位图，扩展名照样是 `.jpg`。必须验：
 
 ```powershell
-$f = 'img\2026-09-01\st-movie.jpg'
+$f = 'img\YYYY-MM-DD\st-movie.jpg'
 $len = (Get-Item $f).Length
 $magic = ([System.BitConverter]::ToString((Get-Content $f -Encoding Byte -TotalCount 3)))
 "$f  $len bytes  magic=$magic"
@@ -59,21 +60,11 @@ $magic = ([System.BitConverter]::ToString((Get-Content $f -Encoding Byte -TotalC
 
 ## 第 4 步：登记
 
-在素材文件里写三行，缺一条都不算完成：
-
-```
-## 图片线索
-- 文件名：img/2026-09-01/st-movie.jpg（已校验，NNN KB）
-- 来源页：<文章页 URL>
-- 图注口径：公开资料（黑白处理）
-```
-
-网页里引用一律正斜杠相对路径 `img/2026-09-01/st-movie.jpg`。黑白处理不用跑脚本，版式 `figure img` 已带 `filter:grayscale(.94)`。
+按 `.qwen/agents/fetch.md` 素材格式里的「图片线索」节登记（文件名、来源页、图注口径），缺一条都不算完成；图注写什么照 `rules/visual.md`，本文件不另定口径。网页里引用一律正斜杠相对路径。黑白处理不用跑脚本——版式 `figure img` 已带 `filter:grayscale(.94)`，口径见 `rules/visual.md`。
 
 ## 硬规则
 
-- **人物头像不要找照片。** 一律 `image_gen` 素描，标注生成。
-- 海报／剧照**不许裁切**：`object-fit:contain; max-height:none`，宁可占满一栏。
-- 不要下粉丝手机抓拍、营销号抠图、霓虹大头、假人脸。
 - 需要登录、带 DRM、或站点明确禁止外链的，直接放弃。
 - 3 个直链内拿不到就写「图片线索：未获取」，交主编走 `image_gen`。
+- 海报／剧照上版不许裁切（实现：`object-fit:contain; max-height:none`，宁可占满一栏）；是否合格由 `layout-check` 按 `rules/page-size.md`（R5）判。
+- 哪类素材算公开成图、哪些必须留给生成图，见 `rules/visual.md`（R4），此处不重复列。

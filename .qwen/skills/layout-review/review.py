@@ -70,6 +70,16 @@ def split_pages(html: str, html_path: Path, page_w: int, paper: str) -> list[tup
     src_uri = html_path.parent.resolve().as_uri()
     if not src_uri.endswith("/"):
         src_uri += "/"
+    # Local stylesheets get inlined: the export runs from a temp directory, and a
+    # relative <link> would not resolve there. The HTML on disk keeps the link, so
+    # css/site.css stays the only place styles are edited.
+    for tag in re.findall(r'<link[^>]+rel="stylesheet"[^>]*>', head):
+        href = re.search(r'href="([^"]+)"', tag)
+        if not href or href.group(1).startswith(("http", "//")):
+            continue
+        sheet = (html_path.parent / href.group(1)).resolve()
+        if sheet.is_file():
+            head = head.replace(tag, "<style>\n" + sheet.read_text(encoding="utf-8") + "\n</style>")
     extra = (
         f'<base href="{src_uri}">'
         "<style>body{background:#00ff00 !important;margin:0 !important}"
@@ -179,11 +189,25 @@ def main() -> int:
         return 1
 
     want = {p.strip().lower() for p in args.pages.split(",") if p.strip()}
-    out_dir = Path(args.output).resolve() if args.output else root / "desk" / "版面" / html_path.stem
+    if not args.output:
+        print(
+            json.dumps(
+                {"ok": False, "error": "必须给 --output；导出目录模板见 rules/disk.md「版面」行"},
+                ensure_ascii=False,
+            )
+        )
+        return 1
+    out_dir = Path(args.output).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
 
     raw_html = html_path.read_text(encoding="utf-8")
-    page_w, paper = detect_page(raw_html, PAGE_W, PAPER)
+    # The stylesheet may be a separate file (css/site.css); page geometry lives there.
+    probe = raw_html + "".join(
+        (html_path.parent / m).resolve().read_text(encoding="utf-8")
+        for m in re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', raw_html)
+        if not m.startswith(("http", "//")) and (html_path.parent / m).is_file()
+    )
+    page_w, paper = detect_page(probe, PAGE_W, PAPER)
     if args.width:
         page_w = args.width
     scale = args.scale or SCALE
@@ -196,6 +220,7 @@ def main() -> int:
 
     edge = find_edge()
     exported: list[str] = []
+    measure: list[dict] = []
     warnings: list[str] = []
     with tempfile.TemporaryDirectory(prefix="layout-export-") as tmp:
         tmp_path = Path(tmp)
@@ -213,6 +238,15 @@ def main() -> int:
                 warnings.append(f"{sid}: {note}")
             dest.write_bytes(raw.read_bytes())
             exported.append(dest.name)
+            with Image.open(dest) as png:
+                w_px, h_px = png.size
+            measure.append(
+                {
+                    "page": dest.name,
+                    "px": [w_px, h_px],
+                    "ratio": round(h_px / w_px, 2) if w_px else None,
+                }
+            )
 
     payload = {
         "ok": True,
@@ -222,6 +256,8 @@ def main() -> int:
         "page_width_px": page_w,
         "scale": scale,
         "expect_png_width_px": page_w * scale,
+        "window_h_px": WINDOW_H,
+        "measure": measure,
     }
     if warnings:
         payload["warnings"] = warnings

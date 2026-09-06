@@ -20,11 +20,6 @@ PAPER_CSS = re.compile(r"--paper\s*:\s*(#[0-9a-fA-F]{3,8})")
 
 
 def detect_page(html: str, fallback_w: int, fallback_paper: str) -> tuple[int, str]:
-    """Read page width and paper colour from the newspaper's own CSS.
-
-    Standards live in rules/ (R5) and are baked into the HTML by the editor; the
-    exporter must not carry a second copy of them.
-    """
     m = PAGE_CSS.search(html)
     width = int(m.group(1)) if m else fallback_w
     p = PAPER_CSS.search(html)
@@ -43,13 +38,13 @@ def find_edge() -> Path:
     for p in candidates:
         if p.is_file():
             return p
-    raise SystemExit("msedge.exe not found")
+    raise FileNotFoundError("msedge.exe not found")
 
 
 def latest_html(root: Path) -> Path:
     files = sorted(root.glob("20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html"))
     if not files:
-        raise SystemExit("no YYYY-MM-DD.html in project root")
+        raise FileNotFoundError("no YYYY-MM-DD.html in project root")
     return files[-1]
 
 
@@ -65,14 +60,11 @@ def split_pages(html: str, html_path: Path, page_w: int, paper: str) -> list[tup
         pos = found + 1
     head_end = html.find("<body>")
     if head_end < 0:
-        raise SystemExit("HTML missing <body>")
+        raise ValueError("HTML missing <body>")
     head = re.sub(r'(?s)<nav class="nav">.*?</nav>', "", html[:head_end])
     src_uri = html_path.parent.resolve().as_uri()
     if not src_uri.endswith("/"):
         src_uri += "/"
-    # Local stylesheets get inlined: the export runs from a temp directory, and a
-    # relative <link> would not resolve there. The HTML on disk keeps the link, so
-    # css/site.css stays the only place styles are edited.
     for tag in re.findall(r'<link[^>]+rel="stylesheet"[^>]*>', head):
         href = re.search(r'href="([^"]+)"', tag)
         if not href or href.group(1).startswith(("http", "//")):
@@ -123,7 +115,6 @@ def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: in
 
 
 def crop_sentinel(png_path: Path) -> str | None:
-    """Crop green sentinel. Return a warning string if the page looks taller than the window."""
     from PIL import Image
 
     with Image.open(png_path) as src:
@@ -163,76 +154,54 @@ def crop_sentinel(png_path: Path) -> str | None:
     return warn
 
 
-def main() -> int:
+def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, scale: int = 0) -> dict:
     try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
-    try:
-        from PIL import Image  # noqa: F401
+        from PIL import Image
     except ImportError:
-        print(json.dumps({"ok": False, "error": "需要 pillow"}, ensure_ascii=False))
-        return 1
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--html", default="")
-    parser.add_argument("--pages", default="")
-    parser.add_argument("--output", default="")
-    parser.add_argument("--width", type=int, default=0, help="页宽 px；默认从 HTML 的 .page CSS 读取")
-    parser.add_argument("--scale", type=int, default=0, help="导出倍率；默认取脚本内 SCALE")
-    args = parser.parse_args()
-
-    root = Path.cwd()
-    html_path = Path(args.html).resolve() if args.html else latest_html(root)
+        return {"ok": False, "error": "需要 pillow"}
+    html_path = Path(html).resolve()
     if not html_path.is_file():
-        print(json.dumps({"ok": False, "error": f"missing html: {html_path}"}, ensure_ascii=False))
-        return 1
-
-    want = {p.strip().lower() for p in args.pages.split(",") if p.strip()}
-    if not args.output:
-        print(
-            json.dumps(
-                {"ok": False, "error": "必须给 --output；导出目录模板见 rules/disk.md「版面」行"},
-                ensure_ascii=False,
-            )
-        )
-        return 1
-    out_dir = Path(args.output).resolve()
+        return {"ok": False, "error": f"missing html: {html_path}"}
+    if not output:
+        return {"ok": False, "error": "必须给 output；见 rules/disk.md「版面」行"}
+    out_dir = Path(output).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
-
     raw_html = html_path.read_text(encoding="utf-8")
-    # The stylesheet may be a separate file (css/site.css); page geometry lives there.
     probe = raw_html + "".join(
         (html_path.parent / m).resolve().read_text(encoding="utf-8")
         for m in re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', raw_html)
         if not m.startswith(("http", "//")) and (html_path.parent / m).is_file()
     )
     page_w, paper = detect_page(probe, PAGE_W, PAPER)
-    if args.width:
-        page_w = args.width
-    scale = args.scale or SCALE
-    pages = split_pages(raw_html, html_path, page_w, paper)
+    if width:
+        page_w = width
+    scale = scale or SCALE
+    want = {p.strip().lower() for p in (pages or "").split(",") if p.strip()}
+    try:
+        page_docs = split_pages(raw_html, html_path, page_w, paper)
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
     if want:
-        pages = [(sid, doc) for sid, doc in pages if sid.lower() in want]
-    if not pages:
-        print(json.dumps({"ok": False, "error": "no matching pages"}, ensure_ascii=False))
-        return 1
-
-    edge = find_edge()
+        page_docs = [(sid, doc) for sid, doc in page_docs if sid.lower() in want]
+    if not page_docs:
+        return {"ok": False, "error": "no matching pages"}
+    try:
+        edge = find_edge()
+    except FileNotFoundError as e:
+        return {"ok": False, "error": str(e)}
     exported: list[str] = []
     measure: list[dict] = []
     warnings: list[str] = []
     with tempfile.TemporaryDirectory(prefix="layout-export-") as tmp:
         tmp_path = Path(tmp)
-        for i, (sid, doc) in enumerate(pages, 1):
+        for i, (sid, doc) in enumerate(page_docs, 1):
             src = tmp_path / f"{sid}.html"
             raw = tmp_path / f"{sid}.raw.png"
             src.write_text(doc, encoding="utf-8")
             screenshot(edge, src, raw, page_w, scale)
             dest = out_dir / f"{i:02d}_{sid.upper()}.png"
             if not raw.is_file():
-                print(json.dumps({"ok": False, "error": f"screenshot failed: {sid}"}, ensure_ascii=False))
-                return 1
+                return {"ok": False, "error": f"screenshot failed: {sid}"}
             note = crop_sentinel(raw)
             if note:
                 warnings.append(f"{sid}: {note}")
@@ -247,10 +216,9 @@ def main() -> int:
                     "ratio": round(h_px / w_px, 2) if w_px else None,
                 }
             )
-
     payload = {
         "ok": True,
-        "dir": str(out_dir),
+        "dir": str(out_dir).replace("\\", "/"),
         "n": len(exported),
         "pages": exported,
         "page_width_px": page_w,
@@ -261,8 +229,27 @@ def main() -> int:
     }
     if warnings:
         payload["warnings"] = warnings
+    return payload
+
+
+def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--html", default="")
+    parser.add_argument("--pages", default="")
+    parser.add_argument("--output", default="")
+    parser.add_argument("--width", type=int, default=0)
+    parser.add_argument("--scale", type=int, default=0)
+    parser.add_argument("--root", default="")
+    args = parser.parse_args()
+    root = Path(args.root).resolve() if args.root else Path.cwd()
+    html_path = Path(args.html).resolve() if args.html else latest_html(root)
+    payload = run(html_path, args.output, pages=args.pages, width=args.width, scale=args.scale)
     print(json.dumps(payload, ensure_ascii=False))
-    return 0
+    return 0 if payload.get("ok") else 1
 
 
 if __name__ == "__main__":

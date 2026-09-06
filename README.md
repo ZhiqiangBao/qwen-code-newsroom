@@ -267,7 +267,7 @@ https://你的用户名.github.io/my-news/
 | 素材文件内部格式（要不要多一个「背景资料」节） | 同上，「落盘」节的格式模板 |
 | 校对多查一类问题 | `.qwen/agents/copy-check.md` 的 grep 骨架与标签（禁词清单本体在 `rules/prose.md`） |
 | 子代理用哪个模型 | 各代理文件顶部 `model:`（改档位还要看 `.qwen/settings.json` 的 `allowedGrades`） |
-| 版面导出细节（浏览器路径、默认倍率、窗口高＝溢出探测上限） | `.qwen/skills/layout-review/review.py`；参数 `--html` `--output`（必填，路径模板取自 R6）、`--pages`、`--width`、`--scale` |
+| 版面导出细节（浏览器路径、默认倍率、窗口高＝溢出探测上限） | `.qwen/tools/review.py`；经 MCP `mcp__desk__review` 调用，不要 `run_shell_command` |
 | 抓图技能的重试与校验门槛 | `.qwen/skills/fetch-poster/SKILL.md` |
 
 ### 第四层：数据源（改 `desk/数据源.md`）

@@ -35,11 +35,12 @@ Windows 也可从仓库根运行：
 在长期保留的干净检出中操作。注册前准备 Python、Node、Qwen CLI 入口和已有写稿配置四个绝对路径。`WriterConfig` 可以指向原目录已有的本机配置。启动脚本通过文件路径读取它。
 
 ```powershell
+& $node $qwenCli mcp approve desk
 .\weekly_issue.ps1 -Check -PythonPath $python -NodePath $node -QwenCli $qwenCli -WriterConfig $writerConfig
 .\install_weekly_task.ps1 -PythonPath $python -NodePath $node -QwenCli $qwenCli -WriterConfig $writerConfig
 ```
 
-预检返回 `dependencies_ready` 后再注册。机器使用中国标准时间，两项任务都依赖注册账户的现有登录会话。
+使用运行任务的账户为当前检出批准 `desk`。Qwen 将批准绑定到该目录与服务器配置。预检返回 `dependencies_ready` 后再注册。机器使用中国标准时间，两项任务都依赖注册账户的现有登录会话。
 
 - `MondayTimesCollect` 每日 20:00 为下一刊期更新固定来源缓存。
 - `MondayTimes` 每周一 00:00 生成候选。已有文件、证据与量尺回执一致的候选时，直接复用该候选。

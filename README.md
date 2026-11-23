@@ -51,12 +51,12 @@ Windows 也可从仓库根运行：
 
 ## 核准发行
 
-主编打开候选 `index.html` 和导出图，核对头条和分析的核心主张、来源及图表。检查桌面和窄屏中的标题、正文衔接、图注与导航。候选量尺要有全部版面的通过记录。修改稿件后重新生成候选并核对受影响的位置。指纹以最新候选为准。
+主编打开候选 `index.html` 和逐版导出图。先确认 [发行验收](rules/acceptance.md)中的自动检查通过，再逐篇核对稿件、逐版核对桌面校样及 320 像素预览，填写本期 `终审.json`。修改候选后，使用新指纹重新验收。
 
 已确认候选后才在仓库根执行以下命令，用真实日期和完整指纹替换占位符。
 
 ```powershell
-python 更新首页.py --date YYYY-MM-DD --approve CANDIDATE_FINGERPRINT
+python 更新首页.py --date YYYY-MM-DD --approve CANDIDATE_FINGERPRINT --final-review "desk/版面/YYYY-MM-DD/终审.json"
 ```
 
 发行成功后打开 `docs/index.html`，核对日期和图片。 `docs/YYYY-MM-DD.html` 是该期归档。只提交本期已验收页面及其引用资源，通过仓库的 main 交付约定发布。候选过期、证据已变或任何硬伤尚存时，保留现行首页。

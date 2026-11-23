@@ -541,6 +541,7 @@ def cmd_prepare(args) -> dict:
 
 
 def cmd_review(args) -> dict:
+    import issue_quality
     import review as layout_review
 
     stamp = _stamp(args.date)
@@ -549,7 +550,11 @@ def cmd_review(args) -> dict:
     candidate = out / "候选"
     manifest = candidate / "manifest.json"
     fingerprint = json.loads(manifest.read_text(encoding="utf-8"))["fingerprint"]
-    result = layout_review.run(candidate / "index.html", out, pages=args.pages or "")
+    index = candidate / "index.html"
+    quality = issue_quality.check_issue(index.read_text(encoding="utf-8"), edition.load_evidence(root, stamp))
+    result = layout_review.run(index, out, pages=args.pages or "")
+    result["issue"] = quality
+    result["ok"] = result.get("ok") is True and quality["ok"]
     result["fingerprint"] = fingerprint
     if not args.pages:
         current = json.loads(manifest.read_text(encoding="utf-8"))["fingerprint"]
@@ -562,7 +567,7 @@ def cmd_review(args) -> dict:
 def cmd_publish(args) -> dict:
     import publish as site
 
-    return site.run(Path(args.root), _stamp(args.date), approval=args.approve)
+    return site.run(Path(args.root), _stamp(args.date), approval=args.approve, final_review=args.final_review)
 
 
 def _guess_line(path: Path, stem: str, header: str = "") -> str:
@@ -1173,6 +1178,7 @@ def main() -> None:
     pub = sub.add_parser("publish", help="核对候选指纹后更新 docs/")
     pub.add_argument("--date", required=True)
     pub.add_argument("--approve", required=True)
+    pub.add_argument("--final-review", type=Path, help="同一候选的主编终审记录 JSON")
     pub.set_defaults(func=cmd_publish)
 
     imgs = sub.add_parser("images", help="列出 img/<日期>/ 文件名，不含像素")

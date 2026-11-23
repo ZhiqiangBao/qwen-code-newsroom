@@ -16,8 +16,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="发行已终审的星期时报候选页")
     parser.add_argument("--date", required=True)
     parser.add_argument("--approve", required=True, help="终审通过的完整候选指纹")
+    parser.add_argument("--final-review", type=Path, help="同一候选的主编终审记录 JSON")
     args = parser.parse_args()
-    result = run(ROOT, args.date, approval=args.approve)
+    result = run(ROOT, args.date, approval=args.approve, final_review=args.final_review)
     print(json.dumps(result, ensure_ascii=False))
     return 0 if result["ok"] else 1
 

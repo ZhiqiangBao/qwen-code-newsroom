@@ -258,9 +258,9 @@ def writer_status() -> str:
     annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False),
     structured_output=False,
 )
-def copy(date: str, id: str, title: str, line: str, source: str, kind: str = "普通", chars: int = 0) -> str:
-    if not all([(date or "").strip(), (id or "").strip(), (title or "").strip(), (line or "").strip(), (source or "").strip()]):
-        return _json({"ok": False, "error": "need date,id,title,line,source"})
+def copy(date: str, id: str, title: str, line: str, source: str = "", kind: str = "普通", chars: int = 0) -> str:
+    if not all([(date or "").strip(), (id or "").strip(), (title or "").strip(), (line or "").strip()]):
+        return _json({"ok": False, "error": "need date,id,title,line"})
     argv = [
         "copy",
         "--date",
@@ -273,9 +273,9 @@ def copy(date: str, id: str, title: str, line: str, source: str, kind: str = "�
         line.strip(),
         "--kind",
         (kind or "普通").strip(),
-        "--source",
-        source.strip(),
     ]
+    if source:
+        argv.extend(["--source", source.strip()])
     if chars:
         argv.extend(["--chars", str(int(chars))])
     return _json(_run(argv, timeout=180))

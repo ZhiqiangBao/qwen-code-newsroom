@@ -85,7 +85,7 @@ def write_copy(
     line = story["line"]
     title = story["title"]
     source_path = story.get("source") or ""
-    nominal = {"快讯": 140, "普通": 550, "深挖": 1400, "分析": 1000, "评论": 900}[kind]
+    nominal = {"快讯": 140, "普通": 550, "深挖": 1400, "分析": 2600, "评论": 900}[kind]
     target = chars or min(nominal, max(120, 120 * len(story["facts"])))
     source_names = {source["id"]: source["name"] for source in story["sources"]}
     facts = []
@@ -99,6 +99,8 @@ def write_copy(
                     + "\n对照基线：" + str(story.get("baseline") or "")
                     + "\n证据局限：" + str(story.get("limit") or "")
                     + "\n区分事实、推断和证据边界；明确对照与不确定性，不能补造事实。")
+    if kind in {"分析", "深挖"} and target >= 2500:
+        analysis += "\n按重稿撰写。正文至少 2500 个汉字，围绕时间线、多方具名材料和可比数字展开。材料不足时停在已有事实。"
     sys = ("你是《星期时报》记者，只依据给定事实和来源写可供读者阅读的中文报道。"
            "不得捏造数字、引语、背景或出处，不要写工作流、提示词或思考过程。\n" + _writer_brief(root))
     user = (f"栏目：{line}\n体裁：{kind}\n标题：{title}\n篇幅参考 {target} 字。"

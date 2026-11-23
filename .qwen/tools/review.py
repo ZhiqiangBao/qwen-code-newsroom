@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import html as html_lib
 import json
 import os
 import re
@@ -15,6 +17,8 @@ PAGE_W = 912
 WINDOW_H = 3600
 SCALE = 2
 PAPER = "#f4f1ea"
+MIN_RATIO = 1.35
+MAX_RATIO = 1.75
 PAGE_CSS = re.compile(r"\.page\s*\{[^}]*?width:\s*min\(\s*(\d+)px", re.S)
 PAPER_CSS = re.compile(r"--paper\s*:\s*(#[0-9a-fA-F]{3,8})")
 
@@ -110,6 +114,82 @@ def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: in
         raise RuntimeError(f"screenshot failed: {result.stderr.decode(errors='replace')[-500:]}")
 
 
+def inspect_page(edge: Path, src_html: Path, page_w: int, scale: int, inner: bool) -> list[str]:
+    # 与截图使用相同视口和浏览器配置；单独渲染的动态内容仍需人工核对。
+    script = r"""<script>
+addEventListener('load', () => {
+  const errors = [];
+  const page = document.querySelector('.page');
+  if (!page) errors.push('未找到版面');
+  else {
+    if (INNER) {
+      const folio = page.querySelector('.folio');
+      const first = Array.from(page.children).find(e => {
+        const r = e.getBoundingClientRect();
+        return r.width && r.height && getComputedStyle(e).visibility !== 'hidden';
+      });
+      if (!folio || !first || (first !== folio && !first.contains(folio)))
+        errors.push('[版头] 内页正文前缺少版头');
+      else {
+        const f = folio.getBoundingClientRect();
+        for (const e of page.children) {
+          if (e === first) continue;
+          const r = e.getBoundingClientRect();
+          if (r.width && r.height && r.top < f.bottom - 1) {
+            errors.push('[版头] 内容出现在版头之前或与版头重叠'); break;
+          }
+        }
+      }
+    }
+    for (const img of page.querySelectorAll('img')) {
+      const r = img.getBoundingClientRect();
+      const label = img.getAttribute('alt') || img.getAttribute('src') || '图片';
+      if (!img.complete || !img.naturalWidth || !img.naturalHeight) {
+        errors.push('[断图] ' + label); continue;
+      }
+      const style = getComputedStyle(img);
+      if (!r.width || !r.height || style.visibility !== 'visible') {
+        errors.push('[图片不可见] ' + label); continue;
+      }
+      const cw = img.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const ch = img.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      const imageRatio = img.naturalWidth / img.naturalHeight;
+      if (cw > 0 && ch > 0 && style.objectFit === 'cover' &&
+          Math.abs(cw / ch / imageRatio - 1) > 0.02)
+        errors.push('[裁图] ' + label);
+      for (let parent = img.parentElement; parent && parent !== page; parent = parent.parentElement) {
+        const ps = getComputedStyle(parent), pr = parent.getBoundingClientRect();
+        const clipX = ['hidden','clip','scroll','auto'].includes(ps.overflowX);
+        const clipY = ['hidden','clip','scroll','auto'].includes(ps.overflowY);
+        if ((clipX && (r.left < pr.left - 1 || r.right > pr.right + 1)) ||
+            (clipY && (r.top < pr.top - 1 || r.bottom > pr.bottom + 1))) {
+          errors.push('[裁图] ' + label); break;
+        }
+      }
+    }
+  }
+  document.body.setAttribute('data-review-errors', JSON.stringify(errors));
+});
+</script>""".replace('INNER', 'true' if inner else 'false')
+    source = src_html.read_text(encoding="utf-8").replace('</body>', script + '</body>')
+    src_html.write_text(source, encoding="utf-8")
+    result = subprocess.run(
+        [str(edge), '--headless=new', '--disable-gpu', '--hide-scrollbars',
+         '--no-first-run', '--disable-extensions', '--allow-file-access-from-files',
+         f'--user-data-dir={src_html.parent / "edge-profile"}',
+         f'--force-device-scale-factor={scale}', '--virtual-time-budget=20000',
+         f'--window-size={page_w},{WINDOW_H}', '--dump-dom', src_html.resolve().as_uri()],
+        check=False, capture_output=True, timeout=50,
+    )
+    if result.returncode:
+        raise RuntimeError('版面检查失败：' + result.stderr.decode(errors='replace')[-500:])
+    dom = result.stdout.decode('utf-8', errors='replace')
+    match = re.search(r'data-review-errors="([^"]*)"', dom)
+    if not match:
+        raise RuntimeError('版面检查未完成')
+    return json.loads(html_lib.unescape(match.group(1)))
+
+
 def crop_sentinel(png_path: Path) -> str | None:
     from PIL import Image
 
@@ -150,6 +230,17 @@ def crop_sentinel(png_path: Path) -> str | None:
     return warn
 
 
+def dimension_error(width: int, height: int, scale: int) -> str:
+    if abs(width - PAGE_W * scale) > 10 or height <= 0:
+        return f"[纸宽] 导出 {width}×{height} 像素，期望纸宽 {PAGE_W * scale}"
+    ratio = height / width
+    if ratio < MIN_RATIO:
+        return f"[版面过短] 高宽比 {ratio:.4f} 低于 {MIN_RATIO}"
+    if ratio > MAX_RATIO:
+        return f"[长卷] 高宽比 {ratio:.4f} 超过 {MAX_RATIO}"
+    return ""
+
+
 def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, scale: int = 0) -> dict:
     try:
         from PIL import Image
@@ -172,11 +263,14 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
     if width:
         page_w = width
     scale = scale or SCALE
+    if page_w != PAGE_W:
+        return {"ok": False, "errors": [f"[纸宽] 版式使用 {page_w}px，要求 {PAGE_W}px"]}
     want = {p.strip().lower() for p in (pages or "").split(",") if p.strip()}
     try:
         page_docs = split_pages(raw_html, html_path, page_w, paper)
     except Exception as e:
         return {"ok": False, "error": str(e)}
+    first_sid = page_docs[0][0] if page_docs else ""
     if want:
         found = {sid.lower() for sid, _ in page_docs}
         missing = sorted(want - found)
@@ -191,7 +285,7 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
         return {"ok": False, "error": str(e)}
     exported: list[str] = []
     measure: list[dict] = []
-    warnings: list[str] = []
+    errors: list[str] = []
     with tempfile.TemporaryDirectory(prefix="layout-export-") as tmp:
         tmp_path = Path(tmp)
         for i, (sid, doc) in enumerate(page_docs, 1):
@@ -200,6 +294,8 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
             src.write_text(doc, encoding="utf-8")
             try:
                 screenshot(edge, src, raw, page_w, scale)
+                errors.extend(f"{sid}: {error}" for error in inspect_page(
+                    edge, src, page_w, scale, sid != first_sid))
             except (OSError, RuntimeError, subprocess.TimeoutExpired) as e:
                 return {"ok": False, "error": str(e)}
             dest = out_dir / f"{i:02d}_{sid.upper()}.png"
@@ -208,38 +304,36 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
             note = crop_sentinel(raw)
             if note:
                 return {"ok": False, "error": f"{sid}: {note}"}
-            dest.write_bytes(raw.read_bytes())
+            proof = raw.read_bytes()
+            dest.write_bytes(proof)
             exported.append(dest.name)
             with Image.open(dest) as png:
                 w_px, h_px = png.size
-            if abs(w_px - page_w * scale) > 10:
-                return {"ok": False, "error": f"{sid}: PNG width {w_px}, expected {page_w * scale}"}
             measure.append(
                 {
+                    "id": sid.lower(),
                     "page": dest.name,
                     "px": [w_px, h_px],
                     "ratio": round(h_px / w_px, 2) if w_px else None,
+                    "sha256": hashlib.sha256(proof).hexdigest(),
                 }
             )
-    errors = [f"{m['page']}: 高宽比 {m['ratio']} 超过 1.75"
-              for m in measure if m["px"][1] / m["px"][0] > 1.75]
-    notes = [f"{m['page']}: 高宽比 {m['ratio']}，请确认短版的阅读层次"
-             for m in measure if m["px"][1] / m["px"][0] < 1.35]
+    for m in measure:
+        failure = dimension_error(*m["px"], scale)
+        if failure:
+            errors.append(f"{m['page']} {failure}")
     payload = {
         "ok": not errors,
         "errors": errors,
-        "notes": notes,
         "dir": str(out_dir).replace("\\", "/"),
         "n": len(exported),
         "pages": exported,
         "page_width_px": page_w,
         "scale": scale,
-        "expect_png_width_px": page_w * scale,
+        "expect_png_width_px": PAGE_W * scale,
         "window_h_px": WINDOW_H,
         "measure": measure,
     }
-    if warnings:
-        payload["warnings"] = warnings
     return payload
 
 

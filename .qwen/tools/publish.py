@@ -13,6 +13,8 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 import edition
+import issue_quality
+import review
 
 TAG = re.compile(r'<(?:link|img|source)\b[^>]*>', re.I)
 ATTR = re.compile(r'''\b(href|src|srcset)\s*=\s*(["'])(.*?)\2''', re.I | re.S)
@@ -183,7 +185,65 @@ def prepare(root: Path, stamp: str) -> dict:
         return {'ok': False, 'cmd': 'prepare', 'date': stamp, 'error': str(exc)}
 
 
-def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes]]:
+def _require_layout(folder: Path, fingerprint: str, page_ids: list[str]) -> None:
+    receipt = json.loads((folder / 'layout.json').read_text(encoding='utf-8'))
+    if not isinstance(receipt, dict) or receipt.get('fingerprint') != fingerprint:
+        raise ValueError('量尺回执缺失或属于另一份候选')
+    result = receipt.get('result')
+    if (not isinstance(result, dict) or result.get('ok') is not True
+        or result.get('errors') or result.get('warnings')):
+        raise ValueError('整期版面量尺未通过')
+    scale = result.get('scale')
+    measures = result.get('measure')
+    if (type(scale) is not int or scale < 1 or result.get('page_width_px') != review.PAGE_W
+        or not isinstance(measures, list) or len(measures) != len(page_ids)):
+        raise ValueError('量尺回执缺少完整版面或纸宽无效')
+    for i, (pid, measure) in enumerate(zip(page_ids, measures, strict=True), 1):
+        name = f'{i:02d}_{pid.upper()}.png'
+        if not isinstance(measure, dict) or measure.get('id') != pid or measure.get('page') != name:
+            raise ValueError(f'{pid.upper()} 的量尺回执与校样顺序不符')
+        size = measure.get('px')
+        if not isinstance(size, list) or len(size) != 2 or any(type(n) is not int or n <= 0 for n in size):
+            raise ValueError(f'{pid.upper()} 的量尺尺寸无效')
+        failure = review.dimension_error(*size, scale)
+        if failure:
+            raise ValueError(f'{pid.upper()} {failure}')
+        if _hash((folder / name).read_bytes()) != measure.get('sha256'):
+            raise ValueError(f'{pid.upper()} 校样图片与量尺回执不一致')
+
+
+def _require_final_review(path: Path | None, fingerprint: str, page_ids: list[str]) -> None:
+    if path is None:
+        raise ValueError('缺少主编终审记录，请提供 --final-review')
+    record = json.loads(path.read_text(encoding='utf-8-sig'))
+    if not isinstance(record, dict) or record.get('fingerprint') != fingerprint:
+        raise ValueError('主编终审记录与当前候选指纹不一致')
+    reviewer = record.get('reviewer')
+    if not isinstance(reviewer, str) or not reviewer.strip():
+        raise ValueError('主编终审记录缺少验收人')
+    editorial = record.get('editorial')
+    if not isinstance(editorial, dict) or any(editorial.get(key) is not True
+            for key in ('facts', 'prose', 'image_rights')):
+        raise ValueError('主编尚未确认事实、文体或图源')
+    desktop = record.get('desktop')
+    if not isinstance(desktop, dict) or desktop.keys() != set(page_ids):
+        raise ValueError('主编须逐版填写桌面校样结果')
+    for pid in page_ids:
+        checked = desktop[pid]
+        if not isinstance(checked, dict) or any(checked.get(key) is not True
+                for key in ('reading_order', 'captions', 'no_clipping')):
+            raise ValueError(f'{pid.upper()} 的阅读顺序、图注或裁切核对未通过')
+        gap, width = checked.get('column_bottom_gap_px'), checked.get('column_width_px')
+        if (type(gap) not in {int, float} or type(width) not in {int, float}
+            or not 0 < width < review.PAGE_W or not 0 <= gap <= width):
+            raise ValueError(f'{pid.upper()} 的栏末行高差应在一栏宽以内')
+    mobile = record.get('mobile')
+    if (not isinstance(mobile, dict) or mobile.get('width_px') != 320
+        or any(mobile.get(key) is not True for key in ('reading_order', 'navigation', 'source_links'))):
+        raise ValueError('主编尚未确认 320px 版的阅读顺序、导航或出处链接')
+
+
+def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes], list[str]]:
     folder = root / 'desk' / '版面' / stamp / '候选'
     if not folder.resolve().is_relative_to(root):
         raise ValueError('candidate directory escapes project root')
@@ -207,16 +267,14 @@ def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes]]:
     fingerprint = _fingerprint(stamp, evidence, files)
     if fingerprint != manifest.get('fingerprint'):
         raise ValueError('candidate fingerprint does not match manifest')
-    edition.check_document(root, stamp, files['index.html'].decode('utf-8'))
-    receipt = json.loads((folder.parent / 'layout.json').read_text(encoding='utf-8'))
-    if not isinstance(receipt, dict):
-        raise ValueError('invalid layout review receipt')
-    result = receipt.get('result')
-    if (receipt.get('fingerprint') != fingerprint or not isinstance(result, dict)
-        or result.get('ok') is not True or not result.get('measure')
-        or result.get('errors') or result.get('warnings')):
-        raise ValueError('full layout review missing, failed, or belongs to another candidate')
-    return fingerprint, files
+    document = files['index.html'].decode('utf-8')
+    edition.check_document(root, stamp, document)
+    quality = issue_quality.check_issue(document, edition.load_evidence(root, stamp))
+    if not quality['ok']:
+        raise ValueError('成报硬指标未通过：' + '；'.join(quality['errors']))
+    pages = [page['id'] for page in quality['pages']]
+    _require_layout(folder.parent, fingerprint, pages)
+    return fingerprint, files, pages
 
 
 def reviewed_status(root: Path, stamp: str) -> dict:
@@ -224,20 +282,21 @@ def reviewed_status(root: Path, stamp: str) -> dict:
     root = Path(root).resolve()
     try:
         stamp = _day(stamp)
-        fingerprint, _ = _reviewed_candidate(root, stamp)
+        fingerprint, _, _ = _reviewed_candidate(root, stamp)
         return {'ok': True, 'date': stamp, 'fingerprint': fingerprint,
                 'index': f'desk/版面/{stamp}/候选/index.html'}
     except (OSError, ValueError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
         return {'ok': False, 'date': stamp, 'error': str(exc)}
 
 
-def run(root: Path, stamp: str, approval: str = '') -> dict:
+def run(root: Path, stamp: str, approval: str = '', final_review: Path | None = None) -> dict:
     root = Path(root).resolve()
     try:
         stamp = _day(stamp)
-        fingerprint, files = _reviewed_candidate(root, stamp)
+        fingerprint, files, pages = _reviewed_candidate(root, stamp)
         if approval != fingerprint:
             raise ValueError('approval does not match current candidate fingerprint')
+        _require_final_review(final_review, fingerprint, pages)
         site = (root / 'docs').resolve()
         if not site.is_relative_to(root):
             raise ValueError('docs directory escapes project root')

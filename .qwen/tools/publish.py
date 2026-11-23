@@ -183,42 +183,61 @@ def prepare(root: Path, stamp: str) -> dict:
         return {'ok': False, 'cmd': 'prepare', 'date': stamp, 'error': str(exc)}
 
 
+def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes]]:
+    folder = root / 'desk' / '版面' / stamp / '候选'
+    if not folder.resolve().is_relative_to(root):
+        raise ValueError('candidate directory escapes project root')
+    manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
+    if not isinstance(manifest, dict) or manifest.get('date') != stamp or not isinstance(manifest.get('files'), dict):
+        raise ValueError('candidate manifest date or files invalid')
+    evidence = edition.issue_digest(root, stamp)
+    if evidence != manifest.get('evidence'):
+        raise ValueError('evidence changed; prepare and review a new candidate')
+    files = {}
+    for name, digest in manifest['files'].items():
+        path = (folder / name).resolve()
+        if not path.is_relative_to(folder.resolve()) or not path.is_file():
+            raise ValueError(f'missing or unsafe candidate file: {name}')
+        data = path.read_bytes()
+        if _hash(data) != digest:
+            raise ValueError(f'candidate file changed: {name}')
+        files[name] = data
+    if 'index.html' not in files or any(name != 'index.html' and not name.startswith(f'assets/{stamp}/') for name in files):
+        raise ValueError('candidate package contains invalid paths')
+    fingerprint = _fingerprint(stamp, evidence, files)
+    if fingerprint != manifest.get('fingerprint'):
+        raise ValueError('candidate fingerprint does not match manifest')
+    edition.check_document(root, stamp, files['index.html'].decode('utf-8'))
+    receipt = json.loads((folder.parent / 'layout.json').read_text(encoding='utf-8'))
+    if not isinstance(receipt, dict):
+        raise ValueError('invalid layout review receipt')
+    result = receipt.get('result')
+    if (receipt.get('fingerprint') != fingerprint or not isinstance(result, dict)
+        or result.get('ok') is not True or not result.get('measure')
+        or result.get('errors') or result.get('warnings')):
+        raise ValueError('full layout review missing, failed, or belongs to another candidate')
+    return fingerprint, files
+
+
+def reviewed_status(root: Path, stamp: str) -> dict:
+    """Inspect the current reviewed candidate without modifying the project."""
+    root = Path(root).resolve()
+    try:
+        stamp = _day(stamp)
+        fingerprint, _ = _reviewed_candidate(root, stamp)
+        return {'ok': True, 'date': stamp, 'fingerprint': fingerprint,
+                'index': f'desk/版面/{stamp}/候选/index.html'}
+    except (OSError, ValueError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
+        return {'ok': False, 'date': stamp, 'error': str(exc)}
+
+
 def run(root: Path, stamp: str, approval: str = '') -> dict:
     root = Path(root).resolve()
     try:
         stamp = _day(stamp)
-        folder = root / 'desk' / '版面' / stamp / '候选'
-        if not folder.resolve().is_relative_to(root):
-            raise ValueError('candidate directory escapes project root')
-        manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
-        if manifest.get('date') != stamp or not isinstance(manifest.get('files'), dict):
-            raise ValueError('candidate manifest date or files invalid')
-        evidence = edition.issue_digest(root, stamp)
-        if evidence != manifest.get('evidence'):
-            raise ValueError('evidence changed; prepare and review a new candidate')
-        files = {}
-        for name, digest in manifest['files'].items():
-            path = (folder / name).resolve()
-            if not path.is_relative_to(folder.resolve()) or not path.is_file():
-                raise ValueError(f'missing or unsafe candidate file: {name}')
-            data = path.read_bytes()
-            if _hash(data) != digest:
-                raise ValueError(f'candidate file changed: {name}')
-            files[name] = data
-        if 'index.html' not in files or any(name != 'index.html' and not name.startswith(f'assets/{stamp}/') for name in files):
-            raise ValueError('candidate package contains invalid paths')
-        fingerprint = _fingerprint(stamp, evidence, files)
-        if fingerprint != manifest.get('fingerprint') or approval != fingerprint:
+        fingerprint, files = _reviewed_candidate(root, stamp)
+        if approval != fingerprint:
             raise ValueError('approval does not match current candidate fingerprint')
-        edition.check_document(root, stamp, files['index.html'].decode('utf-8'))
-        receipt = json.loads((folder.parent / 'layout.json').read_text(encoding='utf-8'))
-        if not isinstance(receipt, dict):
-            raise ValueError('invalid layout review receipt')
-        result = receipt.get('result')
-        if (receipt.get('fingerprint') != fingerprint or not isinstance(result, dict)
-                or result.get('ok') is not True or not result.get('measure')
-                or result.get('errors') or result.get('warnings')):
-            raise ValueError('full layout review missing, failed, or belongs to another candidate')
         site = (root / 'docs').resolve()
         if not site.is_relative_to(root):
             raise ValueError('docs directory escapes project root')
@@ -234,5 +253,5 @@ def run(root: Path, stamp: str, approval: str = '') -> dict:
         _atomic_write(site / 'index.html', files['index.html'])
         return {'ok': True, 'cmd': 'publish', 'date': stamp, 'fingerprint': fingerprint,
                 'index': 'docs/index.html', 'archive': f'docs/{stamp}.html', 'resources': len(files) - 1}
-    except (OSError, ValueError, UnicodeError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
         return {'ok': False, 'cmd': 'publish', 'date': stamp, 'error': str(exc)}

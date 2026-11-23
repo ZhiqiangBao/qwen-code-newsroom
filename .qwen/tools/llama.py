@@ -7,6 +7,7 @@ Live bind is recorded in .qwen/tmp/llama.runtime.json.
 from __future__ import annotations
 
 import json
+import os
 import socket
 import subprocess
 import time
@@ -52,12 +53,19 @@ def v1_url(url: str) -> str:
     return (o + "/v1") if o else ""
 
 
+def writer_config_path() -> Path:
+    override = os.environ.get("MONDAY_TIMES_WRITER_CONFIG", "").strip()
+    return Path(override).expanduser() if override else HERE / "writer.json"
+
+
 def load_cfg(root: Path | None = None) -> dict:
     cfg = dict(DEFAULTS)
     old = HERE / "llama.json"
     if old.is_file():
         cfg.update(json.loads(old.read_text(encoding="utf-8")))
-    writer = HERE / "writer.json"
+    writer = writer_config_path()
+    if os.environ.get("MONDAY_TIMES_WRITER_CONFIG", "").strip() and not writer.is_file():
+        raise FileNotFoundError("writer config override does not exist")
     if writer.is_file():
         data = json.loads(writer.read_text(encoding="utf-8"))
         if data.get("timeout"):

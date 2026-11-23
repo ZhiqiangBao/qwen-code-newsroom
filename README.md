@@ -30,6 +30,24 @@ Windows 也可从仓库根运行：
 
 平日用 `.\weekly_issue.ps1 -CollectOnly` 给下一周一积累固定来源，选定其他刊头日期时加 `-Date`。该模式只抓固定来源。按来源用短时缓存复用请求，刷新保留当期已取得的带日期条目。结果会区分无更新、暂时失败与使用旧缓存的降级。按需要到 [来源表](desk/feeds.json) 增删入口。启用 SEC 来源前填写带机构及联络方式的 `sec_user_agent`，或设置 `SEC_USER_AGENT`；具体配置以来源表字段为准。
 
+## Windows 定时运行
+
+在长期保留的干净检出中操作。注册前准备 Python、Node、Qwen CLI 入口和已有写稿配置四个绝对路径。`WriterConfig` 可以指向原目录已有的本机配置。启动脚本通过文件路径读取它。
+
+```powershell
+.\weekly_issue.ps1 -Check -PythonPath $python -NodePath $node -QwenCli $qwenCli -WriterConfig $writerConfig
+.\install_weekly_task.ps1 -PythonPath $python -NodePath $node -QwenCli $qwenCli -WriterConfig $writerConfig
+```
+
+预检返回 `dependencies_ready` 后再注册。机器使用中国标准时间，两项任务都依赖注册账户的现有登录会话。
+
+- `MondayTimesCollect` 每日 20:00 为下一刊期更新固定来源缓存。
+- `MondayTimes` 每周一 00:00 生成候选。已有文件、证据与量尺回执一致的候选时，直接复用该候选。
+
+每次运行都有独立的 `schedule/<刊期>/<运行目录>/run.json`。从中查看刊期、当前阶段、尝试次数和最终状态，详细输出在同目录的日志。可确认的网络故障允许 10 分钟后重试一次。整期生成共用 4 小时时间预算，预采最多 25 分钟。运行中断时，已保存的证据、稿件和缓存可用于下一次生成。跨周补跑时用 `-Date` 指定原刊期。
+
+只有 `candidate_ready` 或 `reused` 表示有可交给主编打开的候选。查看回执给出的候选路径和指纹，再按下节终审发行。
+
 ## 核准发行
 
 主编打开候选 `index.html` 和导出图，核对头条和分析的核心主张、来源及图表。检查桌面和窄屏中的标题、正文衔接、图注与导航。候选量尺要有全部版面的通过记录。修改稿件后重新生成候选并核对受影响的位置。指纹以最新候选为准。

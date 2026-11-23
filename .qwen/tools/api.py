@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -20,7 +21,9 @@ QWEN_SETTINGS = Path.home() / ".qwen" / "settings.json"
 
 
 def load() -> dict:
-    path = HERE / "writer.json"
+    path = llama.writer_config_path()
+    if os.environ.get("MONDAY_TIMES_WRITER_CONFIG", "").strip() and not path.is_file():
+        raise FileNotFoundError("writer config override does not exist")
     if not path.is_file():
         return {"timeout": 180, "temperature": 0.3, "max_tokens": 3500, "endpoints": []}
     return json.loads(path.read_text(encoding="utf-8"))
@@ -307,7 +310,8 @@ def complete(messages: list[dict], start: bool = True, role: str = "ordinary") -
     # uses the local/default route and never requires a remote service.
     if role == "analysis":
         preferred = [ep for ep in available if "analysis" in (ep.get("roles") or [])]
-        available = preferred + [ep for ep in available if ep not in preferred and not ep.get("roles")]
+        available = preferred + [ep for ep in available if ep not in preferred
+                                 and (not ep.get("roles") or "ordinary" in ep["roles"])]
     else:
         available = [ep for ep in available if not ep.get("roles") or "ordinary" in ep.get("roles", [])]
     for ep in available:
@@ -326,6 +330,53 @@ def complete(messages: list[dict], start: bool = True, role: str = "ordinary") -
             return result
         tried.append({"id": tag, "stage": "chat", "error": result.get("error"), "v1": result.get("v1")})
     return {"ok": False, "error": "没有可用写稿 API", "tried": tried}
+
+
+def preflight() -> dict:
+    """Check ordinary writing routes without starting a local model or exposing credentials.
+
+    A failure is transient when at least one eligible route has a temporary
+    connection, rate limit, or server failure; otherwise it is a configuration
+    or authentication failure. The caller may retry transient failures.
+    """
+    try:
+        available = endpoints()
+        rows = []
+        for ep in available:
+            roles = ep.get("roles") or []
+            if roles and "ordinary" not in roles:
+                continue
+            tag = str(ep.get("id") or "endpoint")
+            if _has_launch(ep):
+                launch = llama.load_cfg()
+                binary = str(launch.get("bin") or "")
+                gguf = str(launch.get("gguf") or "")
+                if (Path(binary).is_file() or shutil.which(binary)) and Path(gguf).is_file():
+                    return {"ok": True, "endpoint": tag, "availability": "startable"}
+                rows.append({"id": tag, "kind": "configuration", "error": "local model binary or GGUF missing"})
+                continue
+            base = str(ep.get("base_url") or "").strip()
+            if not base:
+                rows.append({"id": tag, "kind": "configuration", "error": "base_url missing"})
+                continue
+            try:
+                request = urllib.request.Request(v1_url(base) + "/models", headers=_headers(ep), method="GET")
+                with urllib.request.urlopen(request, timeout=8) as response:
+                    obj = json.loads(response.read(8000).decode("utf-8"))
+                if isinstance(obj, dict) and ("data" in obj or obj.get("object") == "list"):
+                    return {"ok": True, "endpoint": tag, "availability": "reachable"}
+                rows.append({"id": tag, "kind": "configuration", "error": "invalid models response"})
+            except urllib.error.HTTPError as exc:
+                kind = "transient" if exc.code == 429 or 500 <= exc.code <= 599 else "configuration"
+                rows.append({"id": tag, "kind": kind, "error": f"http {exc.code}"})
+            except (urllib.error.URLError, TimeoutError, OSError):
+                rows.append({"id": tag, "kind": "transient", "error": "connection or timeout"})
+            except (ValueError, UnicodeError):
+                rows.append({"id": tag, "kind": "configuration", "error": "invalid endpoint or models response"})
+        kind = "transient" if any(row["kind"] == "transient" for row in rows) else "configuration"
+        return {"ok": False, "kind": kind, "error": "no available ordinary writing route", "endpoints": rows}
+    except (OSError, ValueError, TypeError, AttributeError):
+        return {"ok": False, "kind": "configuration", "error": "writer configuration invalid or unavailable"}
 
 
 def status() -> dict:

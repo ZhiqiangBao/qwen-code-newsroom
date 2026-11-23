@@ -15,7 +15,7 @@ desktop.ini
 打开最新.vbs
 .qwen/tools/writer.json
 
-# 日期版报纸不进仓库；出刊后跑「更新首页.py」生成 index.html 上传
+# 日期版报纸不进仓库；经终审后从候选页更新 docs/
 /20[0-9][0-9]-[0-9][0-9]-[0-9][0-9].html
 
 # 小红书/微信推流脚本与产物，不属于办报流程
@@ -28,3 +28,9 @@ export/
 
 # 定时任务日志（本机产物，含整轮 headless 输出）
 schedule/
+
+# Roundup cache and candidate review are local workspace data.
+/desk/素材/*/.source-cache/
+/desk/版面/*/候选/
+/desk/版面/*/.candidate-*/
+/desk/版面/*/layout.json

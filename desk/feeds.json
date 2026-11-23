@@ -1,0 +1,452 @@
+{
+  "hot": [
+    {
+      "id": "weibo",
+      "rank": 1,
+      "name": "微博热搜",
+      "kind": "weibo",
+      "url": "https://weibo.com/ajax/side/hotSearch",
+      "referer": "https://weibo.com/"
+    },
+    {
+      "id": "baidu-rt",
+      "rank": 2,
+      "name": "百度热搜",
+      "kind": "baidu",
+      "tab": "realtime",
+      "url": "https://top.baidu.com/api/board?tab=realtime"
+    },
+    {
+      "id": "baidu-movie",
+      "rank": 3,
+      "name": "百度电影榜",
+      "kind": "baidu",
+      "tab": "movie",
+      "line": "娱乐"
+    },
+    {
+      "id": "baidu-tv",
+      "rank": 4,
+      "name": "百度电视剧榜",
+      "kind": "baidu",
+      "tab": "teleplay",
+      "line": "娱乐"
+    },
+    {
+      "id": "baidu-fin",
+      "rank": 5,
+      "name": "百度财经榜",
+      "kind": "baidu",
+      "tab": "finance",
+      "line": "科技"
+    }
+  ],
+  "groups": [
+    {
+      "id": "657759",
+      "name": "豆瓣日娱",
+      "region": "日本",
+      "line": "娱乐"
+    },
+    {
+      "id": "677194",
+      "name": "韩娱基地",
+      "region": "韩国",
+      "line": "娱乐"
+    },
+    {
+      "id": "751504",
+      "name": "emoji乐子组",
+      "region": "大陆",
+      "line": "娱乐"
+    },
+    {
+      "id": "740446",
+      "name": "韩娱㛒组",
+      "region": "韩国",
+      "line": "娱乐"
+    },
+    {
+      "id": "689476",
+      "name": "日娱红组",
+      "region": "日本",
+      "line": "娱乐"
+    },
+    {
+      "id": "blabla",
+      "name": "豆瓣π组",
+      "region": "大陆",
+      "line": "娱乐"
+    }
+  ],
+  "labs": [
+    {
+      "id": "openai",
+      "names": [
+        "GPT",
+        "OpenAI",
+        "ChatGPT",
+        "Astra"
+      ]
+    },
+    {
+      "id": "anthropic",
+      "names": [
+        "Claude",
+        "Anthropic",
+        "Fable",
+        "Mythos"
+      ]
+    },
+    {
+      "id": "xai",
+      "names": [
+        "Grok",
+        "xAI"
+      ]
+    },
+    {
+      "id": "google",
+      "names": [
+        "Gemini",
+        "Flash"
+      ]
+    },
+    {
+      "id": "qwen",
+      "names": [
+        "Qwen",
+        "通义",
+        "千问"
+      ]
+    },
+    {
+      "id": "glm",
+      "names": [
+        "GLM",
+        "智谱"
+      ]
+    },
+    {
+      "id": "kimi",
+      "names": [
+        "Kimi",
+        "月之暗面"
+      ]
+    },
+    {
+      "id": "nvidia",
+      "names": [
+        "NVIDIA",
+        "英伟达"
+      ]
+    },
+    {
+      "id": "minimax",
+      "names": [
+        "MiniMax",
+        "海螺"
+      ]
+    }
+  ],
+  "feeds": [
+    {
+      "id": "ithome",
+      "line": "人工智能",
+      "rank": 1,
+      "kind": "rss",
+      "name": "IT之家",
+      "url": "https://www.ithome.com/rss/"
+    },
+    {
+      "id": "ithome-api",
+      "line": "人工智能",
+      "rank": 2,
+      "kind": "json",
+      "name": "IT之家最新",
+      "url": "https://api.ithome.com/json/newslist/news"
+    },
+    {
+      "id": "qbitai",
+      "line": "人工智能",
+      "rank": 3,
+      "kind": "rss",
+      "name": "量子位",
+      "url": "https://www.qbitai.com/feed"
+    },
+    {
+      "id": "ithome-tech",
+      "line": "科技",
+      "rank": 1,
+      "kind": "rss",
+      "name": "IT之家",
+      "url": "https://www.ithome.com/rss/"
+    },
+    {
+      "id": "solidot",
+      "line": "科技",
+      "rank": 2,
+      "kind": "rss",
+      "name": "Solidot",
+      "url": "https://www.solidot.org/index.rss"
+    },
+    {
+      "id": "geekpark",
+      "line": "科技",
+      "rank": 3,
+      "kind": "rss",
+      "name": "极客公园",
+      "url": "https://www.geekpark.net/rss"
+    },
+    {
+      "id": "leiphone",
+      "line": "科技",
+      "rank": 4,
+      "kind": "rss",
+      "name": "雷锋网",
+      "url": "https://www.leiphone.com/feed"
+    },
+    {
+      "id": "sspai",
+      "line": "科技",
+      "rank": 5,
+      "kind": "rss",
+      "name": "少数派",
+      "url": "https://sspai.com/feed"
+    },
+    {
+      "id": "trendforce",
+      "line": "科技",
+      "rank": 6,
+      "kind": "rss",
+      "name": "TrendForce",
+      "url": "https://www.trendforce.com/news/feed/"
+    },
+    {
+      "id": "variety",
+      "line": "娱乐",
+      "rank": 1,
+      "kind": "rss",
+      "name": "Variety",
+      "url": "https://variety.com/feed/"
+    },
+    {
+      "id": "thr",
+      "line": "娱乐",
+      "rank": 2,
+      "kind": "rss",
+      "name": "Hollywood Reporter",
+      "url": "https://www.hollywoodreporter.com/feed/"
+    },
+    {
+      "id": "thewrap",
+      "line": "娱乐",
+      "rank": 3,
+      "kind": "rss",
+      "name": "TheWrap",
+      "url": "https://www.thewrap.com/feed/"
+    },
+    {
+      "id": "soompi",
+      "line": "娱乐",
+      "rank": 4,
+      "kind": "rss",
+      "name": "Soompi",
+      "url": "https://www.soompi.com/feed"
+    },
+    {
+      "id": "koreaboo",
+      "line": "娱乐",
+      "rank": 5,
+      "kind": "rss",
+      "name": "Koreaboo",
+      "url": "https://www.koreaboo.com/feed/"
+    },
+    {
+      "id": "yahoo-ent",
+      "line": "娱乐",
+      "rank": 6,
+      "kind": "rss",
+      "name": "Yahoo!エンタメ",
+      "url": "https://news.yahoo.co.jp/rss/topics/entertainment.xml"
+    },
+    {
+      "id": "yahoo-eiga",
+      "line": "娱乐",
+      "rank": 7,
+      "kind": "rss",
+      "name": "Yahoo!映画",
+      "url": "https://news.yahoo.co.jp/rss/media/eiga/all.xml"
+    },
+    {
+      "id": "eonline",
+      "line": "娱乐",
+      "rank": 8,
+      "kind": "rss",
+      "name": "E! News",
+      "url": "https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml"
+    },
+    {
+      "id": "indiewire",
+      "line": "娱乐",
+      "rank": 9,
+      "kind": "rss",
+      "name": "IndieWire",
+      "url": "https://www.indiewire.com/feed/"
+    },
+    {
+      "id": "mal-news",
+      "line": "动漫",
+      "rank": 1,
+      "kind": "rss",
+      "name": "MyAnimeList News",
+      "url": "https://myanimelist.net/rss.php?type=news"
+    },
+    {
+      "id": "yahoo-ent-anime",
+      "line": "动漫",
+      "rank": 2,
+      "kind": "rss",
+      "name": "Yahoo!エンタメ",
+      "url": "https://news.yahoo.co.jp/rss/topics/entertainment.xml"
+    },
+    {
+      "id": "yahoo-eiga-anime",
+      "line": "动漫",
+      "rank": 3,
+      "kind": "rss",
+      "name": "Yahoo!映画",
+      "url": "https://news.yahoo.co.jp/rss/media/eiga/all.xml"
+    },
+    {
+      "id": "bili-rank",
+      "line": "动漫",
+      "rank": 4,
+      "kind": "bili",
+      "name": "B站番剧榜",
+      "url": "https://api.bilibili.com/pgc/web/rank/list?season_type=1&day=3"
+    },
+    {
+      "id": "google-ai-official",
+      "line": "人工智能",
+      "rank": 10,
+      "kind": "rss",
+      "name": "Google AI 官方博客",
+      "url": "https://blog.google/technology/ai/rss/"
+    },
+    {
+      "id": "nasa-official",
+      "line": "科技",
+      "rank": 10,
+      "kind": "rss",
+      "name": "NASA 新闻",
+      "url": "https://www.nasa.gov/news-release/feed/"
+    },
+    {
+      "id": "sec-nvidia",
+      "line": "人工智能",
+      "rank": 11,
+      "kind": "sec",
+      "name": "SEC 英伟达披露",
+      "url": "https://data.sec.gov/submissions/CIK0001045810.json"
+    }
+  ],
+  "quotes": {
+    "tencent": "https://qt.gtimg.cn/q=s_sh000001,s_sz399001,s_sz399006,s_sh000300,s_sh000905",
+    "baidu": "https://finance.pae.baidu.com/vapi/index/overview?finClientType=pc"
+  },
+  "dead": [],
+  "probe_paths": [
+    "/feed",
+    "/rss",
+    "/rss.xml",
+    "/atom.xml",
+    "/index.xml",
+    "/feed.xml",
+    "/news/rss.xml"
+  ],
+  "keywords": {
+    "人工智能": [
+      "GPT",
+      "OpenAI",
+      "Claude",
+      "Anthropic",
+      "Fable",
+      "Mythos",
+      "Gemini",
+      "Flash",
+      "Astra",
+      "DeepSeek",
+      "通义",
+      "豆包",
+      "月之暗面",
+      "智谱",
+      "大模型",
+      "ChatGPT",
+      "Grok",
+      "Llama",
+      "Qwen",
+      "文心",
+      "混元",
+      "MiniMax",
+      "Mistral",
+      "xAI",
+      "英伟达AI",
+      "NVIDIA",
+      "AGI",
+      "GLM",
+      "Kimi"
+    ],
+    "科技": [
+      "华为",
+      "小米",
+      "苹果",
+      "台积电",
+      "芯片",
+      "光刻",
+      "航天",
+      "新能源",
+      "特斯拉",
+      "比亚迪",
+      "折叠屏",
+      "半导体",
+      "卫星",
+      "SpaceX",
+      "晶圆"
+    ],
+    "娱乐": [
+      "女星",
+      "女演员",
+      "杨幂",
+      "赵丽颖",
+      "杨紫",
+      "刘亦菲",
+      "迪丽热巴",
+      "沈月",
+      "宋祖儿",
+      "陈丽君",
+      "演唱会",
+      "定档",
+      "开机",
+      "花少",
+      "韩剧",
+      "日剧"
+    ],
+    "动漫": [
+      "动漫",
+      "动画",
+      "新番",
+      "柯南",
+      "海贼",
+      "进击",
+      "宫崎骏",
+      "国创",
+      "番剧",
+      "剧场版",
+      "声优"
+    ]
+  },
+  "cache_ttl_seconds": 900,
+  "max_workers": 6,
+  "sec_user_agent": ""
+}

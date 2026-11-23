@@ -1,71 +1,97 @@
 {
-	"agents": {
-		"builtin": {
-			"exploreModel": "qwen3.7-flash"
-		},
-		"modelGrades": {
-			"small": "qwen3.7-flash"
-		},
-		"allowedGrades": ["small"]
-	},
-	"mcpServers": {
-		"desk": {
-			"command": "D:\\python\\python.exe",
-			"args": ["-u", ".qwen/mcp/server.py"],
-			"env": {
-				"PYTHONUNBUFFERED": "1",
-				"PYTHONUTF8": "1",
-				"PYTHONIOENCODING": "utf-8"
-			},
-			"timeout": 600000,
-			"discoveryTimeoutMs": 20000,
-			"trust": true,
-			"alwaysLoadTools": true,
-			"includeTools": [
-				"plan",
-				"feed",
-				"hot",
-				"quotes",
-				"check_feeds",
-				"probe",
-				"materials",
-				"serve",
-				"writer_status",
-				"copy",
-				"copy_lineup",
-				"pack",
-				"compose",
-				"review"
-			]
-		}
-	},
-	"mcp": {
-		"allowed": ["desk"],
-		"excluded": ["godot-ai", "blender"]
-	},
-	"tools": {
-		"visible": [
-			"mcp__desk__plan",
-			"mcp__desk__feed",
-			"mcp__desk__hot",
-			"mcp__desk__quotes",
-			"mcp__desk__check_feeds",
-			"mcp__desk__probe",
-			"mcp__desk__materials",
-			"mcp__desk__serve",
-			"mcp__desk__writer_status",
-			"mcp__desk__copy",
-			"mcp__desk__copy_lineup",
-			"mcp__desk__pack",
-			"mcp__desk__compose",
-			"mcp__desk__review"
-		]
-	},
-	"permissions": {
-		"allow": [
-			"WebFetch(www.bing.com)",
-			"WebFetch(cn.bing.com)"
-		]
-	},
-	"$version": 4
+  "agents": {
+    "builtin": {
+      "exploreModel": "qwen3.7-flash"
+    },
+    "modelGrades": {
+      "small": "qwen3.7-flash"
+    },
+    "allowedGrades": [
+      "small"
+    ]
+  },
+  "mcpServers": {
+    "desk": {
+      "command": "python",
+      "args": [
+        "-u",
+        ".qwen/mcp/server.py"
+      ],
+      "env": {
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONUTF8": "1",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "timeout": 600000,
+      "discoveryTimeoutMs": 20000,
+      "trust": true,
+      "alwaysLoadTools": true,
+      "includeTools": [
+        "plan",
+        "feed",
+        "hot",
+        "quotes",
+        "check_feeds",
+        "probe",
+        "ingest",
+        "materials",
+        "select",
+        "serve",
+        "writer_status",
+        "copy",
+        "copy_lineup",
+        "pack",
+        "put",
+        "compose",
+        "prepare",
+        "review",
+        "images",
+        "place",
+        "figure",
+        "landed"
+      ]
+    }
+  },
+  "mcp": {
+    "allowed": [
+      "desk"
+    ],
+    "excluded": [
+      "godot-ai",
+      "blender"
+    ]
+  },
+  "tools": {
+    "visible": [
+      "mcp__desk__plan",
+      "mcp__desk__feed",
+      "mcp__desk__hot",
+      "mcp__desk__quotes",
+      "mcp__desk__check_feeds",
+      "mcp__desk__probe",
+      "mcp__desk__ingest",
+      "mcp__desk__materials",
+      "mcp__desk__select",
+      "mcp__desk__serve",
+      "mcp__desk__writer_status",
+      "mcp__desk__copy",
+      "mcp__desk__copy_lineup",
+      "mcp__desk__pack",
+      "mcp__desk__put",
+      "mcp__desk__compose",
+      "mcp__desk__prepare",
+      "mcp__desk__review",
+      "mcp__desk__images",
+      "mcp__desk__place",
+      "mcp__desk__figure",
+      "mcp__desk__landed"
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "WebFetch",
+      "WebSearch"
+    ]
+  },
+  "$version": 4
 }

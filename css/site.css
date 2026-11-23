@@ -120,3 +120,40 @@ figure.poster figcaption{font-size:10.5px}
  figure img{max-height:none}
  figure.wrap,figure.poster{float:none;width:100%;margin:0 0 11px}
 }
+
+/* Article-led bands keep each story, image and attribution together. */
+.band.n1,.band.n2,.band.n3{display:grid;gap:18px;align-items:start}
+.band.n1{grid-template-columns:minmax(0,1fr)}
+.band.n2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.band.n3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.band > article{min-width:0;overflow-wrap:break-word}
+.band > article + article{border-left:1px solid var(--hair);padding-left:16px}
+.band h1,.band h2,.band h3,.band h4{text-align:left;overflow-wrap:normal;word-break:normal}
+.band article p{line-height:1.65}
+.article-figure{float:none;width:100%;margin:0 0 10px}
+.article-figure img{max-height:none;object-fit:contain}
+.article-figure figcaption{text-align:left;overflow-wrap:break-word}
+.article-sources{margin:10px 0 0;padding-top:6px;border-top:1px solid var(--hair);
+ font-family:"Libre Franklin","Noto Serif SC",sans-serif;font-size:10.5px;line-height:1.5;
+ text-indent:0;text-align:left;color:var(--mute);overflow-wrap:anywhere}
+.article-sources a{text-decoration:underline;text-underline-offset:2px}
+@media (max-width:760px){
+ .band.n2,.band.n3{grid-template-columns:minmax(0,1fr)}
+ .band > article + article{border-left:0;border-top:1px solid var(--hair);padding:14px 0 0}
+ .page{width:calc(100% - 16px);padding:14px 16px 20px}
+ .band article p{font-size:15px;line-height:1.75}
+ .folio,.foot,.date{gap:8px;flex-wrap:wrap;letter-spacing:.04em}
+ .nav{gap:8px;letter-spacing:0}
+}
+.flow figure.article-figure{float:none;width:100%;margin:0 0 10px}
+.flow figure.article-figure img{width:100%;height:auto;max-height:none;object-fit:contain}
+
+.flow.n1{column-count:1;column-rule:none}
+.article-heading{break-inside:avoid-column;break-after:avoid-column}
+.article-heading .hed{text-align:left;text-justify:auto;text-wrap:balance}
+.table-scroll{max-width:100%;overflow-x:auto;break-inside:avoid-column}
+.table-scroll table.stat{min-width:16rem}
+@media (max-width:760px){
+ .flow article>p:not(.article-sources){font-size:15px;line-height:1.65}
+ .article-sources{font-size:12px}
+}

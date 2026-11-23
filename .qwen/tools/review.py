@@ -65,19 +65,10 @@ def split_pages(html: str, html_path: Path, page_w: int, paper: str) -> list[tup
     src_uri = html_path.parent.resolve().as_uri()
     if not src_uri.endswith("/"):
         src_uri += "/"
-    for tag in re.findall(r'<link[^>]+rel="stylesheet"[^>]*>', head):
-        href = re.search(r'href="([^"]+)"', tag)
-        if not href or href.group(1).startswith(("http", "//")):
-            continue
-        sheet = (html_path.parent / href.group(1)).resolve()
-        if sheet.is_file():
-            head = head.replace(tag, "<style>\n" + sheet.read_text(encoding="utf-8") + "\n</style>")
-    extra = (
-        f'<base href="{src_uri}">'
-        "<style>body{background:#00ff00 !important;margin:0 !important}"
-        f".page{{width:{page_w}px !important;margin:0 !important;box-shadow:none !important;"
-        f"padding:14px 26px 22px !important;background:{paper} !important}}</style>"
-    )
+    head = head.replace("<head>", f'<head><base href="{src_uri}">', 1)
+    extra = ("<style>body{background:#00ff00 !important;margin:0 !important}"
+             f".page{{width:{page_w}px !important;margin:0 !important;box-shadow:none !important;"
+             f"background:{paper} !important}}</style>")
     head = head.replace("</head>", extra + "</head>")
     pages: list[tuple[str, str]] = []
     for i, start in enumerate(idxs):
@@ -95,7 +86,7 @@ def split_pages(html: str, html_path: Path, page_w: int, paper: str) -> list[tup
 
 def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: int) -> None:
     uri = src_html.resolve().as_uri()
-    subprocess.run(
+    result = subprocess.run(
         [
             str(edge),
             "--headless=new",
@@ -103,6 +94,8 @@ def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: in
             "--hide-scrollbars",
             "--no-first-run",
             "--disable-extensions",
+            "--allow-file-access-from-files",
+            f"--user-data-dir={src_html.parent / 'edge-profile'}",
             f"--force-device-scale-factor={scale}",
             "--virtual-time-budget=20000",
             f"--window-size={page_w},{WINDOW_H}",
@@ -111,7 +104,10 @@ def screenshot(edge: Path, src_html: Path, out_png: Path, page_w: int, scale: in
         ],
         check=False,
         capture_output=True,
+        timeout=50,
     )
+    if result.returncode != 0:
+        raise RuntimeError(f"screenshot failed: {result.stderr.decode(errors='replace')[-500:]}")
 
 
 def crop_sentinel(png_path: Path) -> str | None:
@@ -140,7 +136,7 @@ def crop_sentinel(png_path: Path) -> str | None:
             break
     if hit < 0:
         im.close()
-        return warn
+        return f"{png_path.name} 未检测到版面"
     bottom = hit
     for y in range(min(h - 1, hit + 4), hit, -1):
         if row_ink(y):
@@ -182,6 +178,10 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
     except Exception as e:
         return {"ok": False, "error": str(e)}
     if want:
+        found = {sid.lower() for sid, _ in page_docs}
+        missing = sorted(want - found)
+        if missing:
+            return {"ok": False, "error": "missing pages: " + ", ".join(missing)}
         page_docs = [(sid, doc) for sid, doc in page_docs if sid.lower() in want]
     if not page_docs:
         return {"ok": False, "error": "no matching pages"}
@@ -198,17 +198,22 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
             src = tmp_path / f"{sid}.html"
             raw = tmp_path / f"{sid}.raw.png"
             src.write_text(doc, encoding="utf-8")
-            screenshot(edge, src, raw, page_w, scale)
+            try:
+                screenshot(edge, src, raw, page_w, scale)
+            except (OSError, RuntimeError, subprocess.TimeoutExpired) as e:
+                return {"ok": False, "error": str(e)}
             dest = out_dir / f"{i:02d}_{sid.upper()}.png"
             if not raw.is_file():
                 return {"ok": False, "error": f"screenshot failed: {sid}"}
             note = crop_sentinel(raw)
             if note:
-                warnings.append(f"{sid}: {note}")
+                return {"ok": False, "error": f"{sid}: {note}"}
             dest.write_bytes(raw.read_bytes())
             exported.append(dest.name)
             with Image.open(dest) as png:
                 w_px, h_px = png.size
+            if abs(w_px - page_w * scale) > 10:
+                return {"ok": False, "error": f"{sid}: PNG width {w_px}, expected {page_w * scale}"}
             measure.append(
                 {
                     "page": dest.name,
@@ -216,8 +221,14 @@ def run(html: str | Path, output: str | Path, pages: str = "", width: int = 0, s
                     "ratio": round(h_px / w_px, 2) if w_px else None,
                 }
             )
+    errors = [f"{m['page']}: 高宽比 {m['ratio']} 超过 1.75"
+              for m in measure if m["px"][1] / m["px"][0] > 1.75]
+    notes = [f"{m['page']}: 高宽比 {m['ratio']}，请确认短版的阅读层次"
+             for m in measure if m["px"][1] / m["px"][0] < 1.35]
     payload = {
-        "ok": True,
+        "ok": not errors,
+        "errors": errors,
+        "notes": notes,
         "dir": str(out_dir).replace("\\", "/"),
         "n": len(exported),
         "pages": exported,

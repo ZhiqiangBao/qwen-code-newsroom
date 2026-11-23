@@ -212,7 +212,7 @@ def _require_layout(folder: Path, fingerprint: str, page_ids: list[str]) -> None
             raise ValueError(f'{pid.upper()} 校样图片与量尺回执不一致')
 
 
-def _require_final_review(path: Path | None, fingerprint: str, page_ids: list[str]) -> None:
+def _require_final_review(path: Path | None, fingerprint: str, page_ids: list[str], figure_ids: set[str]) -> None:
     if path is None:
         raise ValueError('缺少主编终审记录，请提供 --final-review')
     record = json.loads(path.read_text(encoding='utf-8-sig'))
@@ -225,6 +225,14 @@ def _require_final_review(path: Path | None, fingerprint: str, page_ids: list[st
     if not isinstance(editorial, dict) or any(editorial.get(key) is not True
             for key in ('facts', 'prose', 'image_rights')):
         raise ValueError('主编尚未确认事实、文体或图源')
+    images = record.get('images')
+    if not isinstance(images, dict) or images.keys() != figure_ids:
+        raise ValueError('须提交实际见报配图逐张验收结果')
+    for fid, image in images.items():
+        if (not isinstance(image, dict) or not isinstance(image.get('reviewer'), str)
+            or not image['reviewer'].strip()
+            or any(image.get(key) is not True for key in ('provenance', 'matches_article', 'print'))):
+            raise ValueError(f'配图 {fid} 的来源、稿件对应或成报效果未通过')
     desktop = record.get('desktop')
     if not isinstance(desktop, dict) or desktop.keys() != set(page_ids):
         raise ValueError('主编须逐版填写桌面校样结果')
@@ -243,7 +251,7 @@ def _require_final_review(path: Path | None, fingerprint: str, page_ids: list[st
         raise ValueError('主编尚未确认 320px 版的阅读顺序、导航或出处链接')
 
 
-def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes], list[str]]:
+def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes], list[str], set[str]]:
     folder = root / 'desk' / '版面' / stamp / '候选'
     if not folder.resolve().is_relative_to(root):
         raise ValueError('candidate directory escapes project root')
@@ -273,8 +281,9 @@ def _reviewed_candidate(root: Path, stamp: str) -> tuple[str, dict[str, bytes], 
     if not quality['ok']:
         raise ValueError('成报硬指标未通过：' + '；'.join(quality['errors']))
     pages = [page['id'] for page in quality['pages']]
+    figures = {figure['id'].strip() for page in quality['pages'] for figure in page['figures']}
     _require_layout(folder.parent, fingerprint, pages)
-    return fingerprint, files, pages
+    return fingerprint, files, pages, figures
 
 
 def reviewed_status(root: Path, stamp: str) -> dict:
@@ -282,7 +291,7 @@ def reviewed_status(root: Path, stamp: str) -> dict:
     root = Path(root).resolve()
     try:
         stamp = _day(stamp)
-        fingerprint, _, _ = _reviewed_candidate(root, stamp)
+        fingerprint, _, _, _ = _reviewed_candidate(root, stamp)
         return {'ok': True, 'date': stamp, 'fingerprint': fingerprint,
                 'index': f'desk/版面/{stamp}/候选/index.html'}
     except (OSError, ValueError, UnicodeError, json.JSONDecodeError, TypeError) as exc:
@@ -293,10 +302,10 @@ def run(root: Path, stamp: str, approval: str = '', final_review: Path | None = 
     root = Path(root).resolve()
     try:
         stamp = _day(stamp)
-        fingerprint, files, pages = _reviewed_candidate(root, stamp)
+        fingerprint, files, pages, figures = _reviewed_candidate(root, stamp)
         if approval != fingerprint:
             raise ValueError('approval does not match current candidate fingerprint')
-        _require_final_review(final_review, fingerprint, pages)
+        _require_final_review(final_review, fingerprint, pages, figures)
         site = (root / 'docs').resolve()
         if not site.is_relative_to(root):
             raise ValueError('docs directory escapes project root')

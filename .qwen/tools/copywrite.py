@@ -361,11 +361,17 @@ def render_figure(fig: dict) -> str:
         cls = "wrap"
     src = html.escape(_figure_src(fig))
     cap = html.escape(fig.get("cap") or "")
-    alt = html.escape(fig.get("alt") or fig.get("cap") or "")
+    alt = html.escape(fig.get("alt") or "")
+    fid = html.escape(str(fig.get("id") or ""), quote=True)
+    kind = html.escape(str(fig.get("kind") or ""), quote=True)
+    origin = html.escape(str(fig.get("origin") or ""), quote=True)
+    source = html.escape(str(fig.get("source_url") or ""), quote=True)
+    source_attr = f' data-image-source="{source}"' if source else ""
+    source_link = f' <a href="{source}" rel="noopener noreferrer">图片来源</a>' if source else ""
     return (
-        f'<figure class="article-figure {cls}">\n'
+        f'<figure class="article-figure {cls}" data-figure-id="{fid}" data-image-kind="{kind}" data-image-origin="{origin}"{source_attr}>\n'
         f'<img src="{src}" alt="{alt}" />\n'
-        f"<figcaption>{cap}</figcaption>\n"
+        f"<figcaption>{cap}{source_link}</figcaption>\n"
         "</figure>"
     )
 
@@ -462,7 +468,7 @@ def compose(root: Path, stamp: str, lineup: dict | None = None) -> dict:
                 except ValueError:
                     skip_figs.append(fig.get("id") or src)
                     continue
-                if not src or not candidate.is_file() or not (fig.get("alt") or fig.get("cap")):
+                if not src or not candidate.is_file() or not candidate.stat().st_size or not (fig.get("alt") or fig.get("cap")):
                     skip_figs.append(fig.get("id") or src or page["id"])
                     continue
                 attached.append(fig)

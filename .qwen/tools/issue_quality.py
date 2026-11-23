@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from html.parser import HTMLParser
 import re
+from urllib.parse import urlsplit
 
 import catalog
 
@@ -52,16 +53,20 @@ class _IssueReader(HTMLParser):
                 self.page["stories"].append(self.story)
             if self.story is not None:
                 if tag == "figure":
-                    self.figure = {"images": [], "caption": "", "wide": "wide" in classes}
+                    self.figure = {"images": [], "caption": "", "wide": "wide" in classes,
+                                   "id": attrs.get("data-figure-id") or "", "kind": attrs.get("data-image-kind") or "",
+                                   "origin": attrs.get("data-image-origin") or "", "source": attrs.get("data-image-source") or "", "links": []}
                     self.page["figures"].append(self.figure)
                 if tag == "img":
                     if self.figure is None:
                         self.errors.append(f"稿件 {self.story['id']} 的图片缺少图注容器")
-                        self.page["figures"].append({"images": [attrs.get("alt") or ""], "caption": "", "wide": "wide" in classes})
+                        self.page["figures"].append({"images": [{"alt": attrs.get("alt") or "", "src": attrs.get("src") or ""}], "caption": "", "wide": "wide" in classes, "id": "", "kind": "", "origin": "", "source": "", "links": []})
                     else:
-                        self.figure["images"].append(attrs.get("alt") or "")
+                        self.figure["images"].append({"alt": attrs.get("alt") or "", "src": attrs.get("src") or ""})
                 if tag == "figcaption" and self.figure is not None:
                     self.caption = []
+                if tag == "a" and self.caption is not None and self.figure is not None:
+                    self.figure["links"].append(attrs.get("href") or "")
                 excluded = any(entry[0] in self.EXCLUDED for entry in self.stack) or tag in self.EXCLUDED
                 if tag == "p" and not excluded and "article-sources" not in classes:
                     if "lede" in classes:
@@ -133,6 +138,7 @@ def check_issue(document: str, stories: dict) -> dict:
     seen = set()
     total = 0
     figures = 0
+    figure_ids = set()
     units = 0
     heavy = []
     last_page_by_line = {}
@@ -201,10 +207,33 @@ def check_issue(document: str, stories: dict) -> dict:
         if wide > 1 or (wide and len(page["stories"]) != 1):
             errors.append(f"{pid} 仅独占版位的主稿可配一张通栏图")
         for fig in page["figures"]:
-            figures += len(fig["images"])
-            for alt in fig["images"]:
-                if not alt.strip() or not fig["caption"]:
-                    errors.append(f"{pid} 图片缺少 alt 或图注")
+            fid, kind, source = fig["id"].strip(), fig["kind"], fig["source"].strip()
+            valid = True
+            if not fid or fid in figure_ids:
+                errors.append(f"{pid} 图片 ID 缺失或重复：{fid}")
+                valid = False
+            figure_ids.add(fid)
+            if len(fig["images"]) != 1 or any(not img["alt"].strip() or not img["src"].strip() for img in fig["images"]) or not fig["caption"]:
+                errors.append(f"{pid} 配图须有一张非空图片、alt 和图注")
+                valid = False
+            if kind in {"official-photo", "official-art"}:
+                try:
+                    url = urlsplit(source)
+                    https_source = url.scheme == "https" and bool(url.hostname and url.path.strip("/")) and not url.username
+                except ValueError:
+                    https_source = False
+                if not https_source or source not in fig["links"] or not fig["origin"].strip() or "公开资料" not in fig["caption"]:
+                    errors.append(f"{pid} 官方配图须注明发布方及使用依据、提供 HTTPS 原件链接与公开资料标识")
+                    valid = False
+            elif kind in {"generated-illustration", "generated-portrait"}:
+                if not fig["origin"].strip() or "人工智能生成／本报制图" not in fig["caption"]:
+                    errors.append(f"{pid} 生成配图须记录替代原因并标明人工智能生成／本报制图")
+                    valid = False
+            else:
+                errors.append(f"{pid} 图片类型无效或为不计配图的图表：{kind}")
+                valid = False
+            if valid:
+                figures += 1
         del page["body_started"]
     if units > 20:
         errors.append(f"全刊稿件超过 20 份：{units}")

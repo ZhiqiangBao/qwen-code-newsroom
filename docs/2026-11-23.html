@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>星期时报 · 2026 年 11 月 23 日 · 两项千禧难题证明，走到不同的核验阶段</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="assets/2026-11-23/8b45e78adf2bc0a960b077e264c2a98a1b10ff5a31b860f5bd64fd0462a52275/asset.css" />
+</head>
+<body>
+<nav class="nav">
+<a href="#a1">头版</a><a href="#a2">人工智能</a><a href="#a3">科技</a><a href="#a4">娱乐</a><a href="#a5">动漫</a>
+</nav>
+<section class="page" id="a1">
+<header class="mast">
+<div class="pre"><span>All the News That’s Fit to Print</span><span>星期时报</span></div>
+<hr />
+<div class="en">The Monday Times</div>
+<h1>星期时报</h1>
+<hr class="dbl" />
+<div class="date"><span>2026 年 11 月 23 日　星期一</span></div>
+<hr />
+</header>
+<div class="flow n2">
+<article data-story-id="math">
+<header class="article-heading"><p class="kicker">人工智能 · 分析</p>
+<h2 class="hed xxl">两项千禧难题证明，走到不同的核验阶段</h2>
+<p class="deck">Lean 社区复核了黎曼猜想证明。纳维–斯托克斯方程论文的数值证书仍待公开，决定了外界目前能复现到哪一步。</p>
+<p class="by">本报综合</p>
+</header>
+<div class="analysis-text"><p class="lede">11 月 20 日，数学家莱文特·阿尔珀格公开了黎曼猜想的 Lean 证明。同日，他与特里斯坦·巴克马斯特发布论文，提出三维无外力纳维–斯托克斯方程存在有限时间爆破。两项工作的关键差别，在随后能否由别人用同一份材料独立核验。</p>
+<p>黎曼猜想一侧，Lean 和 Mathlib 社区 11 月 21 日发布联合声明。他们先检查代码中的命题是否就是数学家所说的黎曼猜想，再复现编译，并用独立工具比较命题、用多个检查器验证导出的证明。这就能说明代码能否运行、证明的是哪条命题，以及推导是否符合形式系统的规则。</p>
+<p>纳维–斯托克斯方程一侧，作者公布了论文和 Lean 代码。仓库说明，论文所需的数值证书与验证该证书的区间算术计算都未随代码发布。论文给出证书的哈希值，便于将来确认拿到的是同一份文件。只凭哈希值，外部研究者还无法重做那一步计算。</p>
+<p>判断形式化证明的进展，可以先看检查器验证的是哪条命题，再看结论依赖的输入是否齐备。两个问题都有明确答案时，读者才能知道独立复核覆盖了哪一步。同行仍可继续检视证明的方法、适用范围和数学意义。</p>
+</div>
+<div class="table-scroll" role="region" aria-label="两项证明的公开材料与核验进展" tabindex="0"><table class="stat"><caption>两项证明的公开材料与核验进展</caption><thead><tr><th scope="col">项目</th><th scope="col">公开材料</th><th scope="col">独立核验进展</th></tr></thead><tbody><tr><th scope="row">黎曼猜想</th><td>Lean 证明与社区核验声明</td><td>已复现编译，并核对命题与形式推导</td></tr><tr><th scope="row">纳维–斯托克斯方程</th><td>论文、Lean 代码与证书哈希</td><td>数值证书及其验证计算仍待公开</td></tr></tbody></table></div><p class="article-sources">来源：<a href="https://leanprover-community.github.io/blog/posts/riemann-hypothesis/" rel="noopener noreferrer">Lean 与 Mathlib 社区联合声明</a> · <a href="https://github.com/tristanbuckmaster/navier-stokes" rel="noopener noreferrer">阿尔珀格与巴克马斯特的论文和代码仓库</a></p>
+</article>
+
+<article data-story-id="tool-retrieval">
+<header class="article-heading"><p class="kicker">人工智能</p>
+<h3 class="hed l">Gemini API 预览按需加载工具参数</h3>
+<p class="deck">Google 推出工具检索功能，接入大量工具的应用可以在需要时才加载完整参数。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">Google 11 月 19 日在 Gemini Interactions API 预览工具检索功能。模型先看到工具的名称和说明。确定要调用哪个工具之后，API 才在同一次请求中加载它的完整参数定义。</p>
+<p>如果一个应用接入了数十个甚至数百个工具，过去把参数定义全部放进请求会占用输入额度。Google 表示，按需加载可以减少这部分开销。开发者仍可把经常使用的工具直接放在请求里。</p>
+<p>这项功能支持 Gemini 3.6 及更新的兼容模型，适用范围为 Interactions API。Google 按所用模型的标准用量计费。</p>
+<p class="article-sources">来源：<a href="https://blog.google/innovation-and-ai/technology/developers-tools/gemini-api-tool-retrieval/" rel="noopener noreferrer">Google官方博客：Introducing Tool Retrieval in the Gemini API</a></p>
+</article>
+
+<article data-story-id="gpt62">
+<header class="article-heading"><p class="kicker">人工智能</p>
+<h3 class="hed l">GPT-6.2 Astra 在双臂机器人测试中取得 41.2% 成功率</h3>
+<p class="deck">XDOF 在同一套 16 项操作任务中记录的上一代成绩是 19.6%。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">机器人评测机构 XDOF 11 月 20 日公布，GPT-6.2 Astra 在 Ember-0 双臂机器人测试中的综合成功率为 41.2%。在同一套任务中，GPT-6 Astra 得分为 19.6%，两者相差 21.6 个百分点。</p>
+<p>Ember-0 在真实机器人工作台上重复测试 16 项操作，每项 30 次。任务包括展开 T 恤、打结和取出被遮挡的物品。这些成绩反映的是指定工作台和任务设置下的表现。</p>
+<p class="article-sources">来源：<a href="https://x.com/xdofai/status/2123822009696342190" rel="noopener noreferrer">XDOF 公布的 Ember-0 新成绩</a> · <a href="https://www.xdof.ai/blog/evaluating-llms" rel="noopener noreferrer">XDOF Ember-0 评测方法</a> · <a href="https://www.qbitai.com/2026/11/511779.html" rel="noopener noreferrer">量子位的 Ember-0 评测报道</a></p>
+</article>
+</div>
+<footer class="foot"><span>星期时报 · 2026 年 11 月 23 日</span><span>A1</span></footer>
+</section>
+<section class="page" id="a2">
+<header class="folio"><span>2026 年 11 月 23 日　星期一</span><span>人工智能</span><span>A2</span></header>
+<div class="flow n2">
+<article data-story-id="groupassist">
+<header class="article-heading"><p class="kicker">人工智能</p>
+<h2 class="hed xxl">八万条群聊消息怎样检验 AI 的记忆</h2>
+<p class="deck">GroupAssistBench 分开测量助手能否找回消息，以及能否用它回答群成员的问题。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">腾讯元宝与伦敦国王学院等机构的研究人员在 11 月 21 日刊出的团队稿中介绍了群聊评测 GroupAssistBench。相关预印本于 11 月 3 日公开。数据来自已经部署的群助手，覆盖 50 个群组和 80,299 条消息。</p>
+<p>一类题目检查助手能不能找回群里说过的事，另一类要求助手用多位成员留下的信息解决具体问题。在团队公开的比较中，记忆系统 EverMemOS 的找回得分为 0.621，高于直接放入完整对话的 0.570。到了使用记忆的任务，得分分别为 0.247 和 0.431。</p>
+<p>这组结果显示，群助手即使找到了相关消息，也可能没能在回答里用对它。消息分散在多人之间，或前后互相冲突时，研究人员观察到的差距尤为明显。</p>
+<p class="article-sources">来源：<a href="https://arxiv.org/abs/2611.04867" rel="noopener noreferrer">GroupAssistBench 论文</a> · <a href="https://www.qbitai.com/2026/11/511841.html" rel="noopener noreferrer">研究团队在量子位的署名文章</a></p>
+</article>
+
+<article data-story-id="grokbot">
+<header class="article-heading"><p class="kicker">人工智能</p>
+<h3 class="hed l">Grok Bot 团队怎样核对每月上万次代码改动</h3>
+<p class="deck">Lauren Tan 在公开演讲中介绍了团队的合并量，以及如何把常见错误交给工具拦截。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">AI Engineer 11 月 19 日分享了 Grok Bot 工程师 Lauren Tan 的大会演讲。她在 11 月 11 日的现场演讲中表示，自己在 10 月交付了约 3,000 个合并请求，团队同期交付约 1.1 万个。她披露的撤回率约为 0.5%。</p>
+<p>Tan 举例说，如果同一种问题在代码审查中反复出现，团队会先考虑改变接口、抽取通用实现，或把检查写进工具。团队也会让代码助手在运行中的应用里核对实际行为。她说，这些措施减少了多数产品代码需要的深入人工审查。合并量和撤回率均来自她披露的团队数据。</p>
+<p class="article-sources">来源：<a href="https://ai.engineer/talks/O_zcc6Xl12g-all-code-is-slop-except-mine" rel="noopener noreferrer">AI Engineer 大会演讲与讲稿</a> · <a href="https://ai.engineer/code/2026/talks/lauren-tan" rel="noopener noreferrer">AI Engineer CODE 2026 大会页面</a></p>
+</article>
+</div>
+<div class="flow band n1">
+<article class="ni" data-story-id="qwen4">
+<header class="article-heading"><p class="kicker">人工智能</p>
+<h3 class="hed s">阿里巴巴发布 Qwen4-Max</h3>
+<p class="deck">按阿里巴巴公布的数据，模型总参数为 2.4 万亿，每处理一个词元激活 710 亿参数。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">阿里巴巴 11 月 16 日发布 Qwen4-Max。公司称，这一模型采用混合专家架构，支持视觉输入和最长约 100 万词元的上下文。</p>
+<p class="article-sources">来源：<a href="https://www.alibabagroup.com/en-US/document-2060139246777270272" rel="noopener noreferrer">阿里巴巴发布公告</a></p>
+</article>
+</div>
+<footer class="foot"><span>星期时报 · 2026 年 11 月 23 日</span><span>A2</span></footer>
+</section>
+<section class="page" id="a3">
+<header class="folio"><span>2026 年 11 月 23 日　星期一</span><span>科技</span><span>A3</span></header>
+<div class="flow n2">
+<article data-story-id="power">
+<header class="article-heading"><p class="kicker">科技</p>
+<h2 class="hed xxl">报告估算：Anthropic 部分美国数据中心 2028 年近 98% 用电或来自化石燃料</h2>
+<p class="deck">研究团队按已识别的美国签约站点计算，将现场供电与电网为新增负荷调度的机组都纳入估算。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">Better Data Center Project 在 11 月 16 日发布的报告中估算，Anthropic 已识别的美国签约数据中心到 2028 年约有 87% 的用电来自天然气、11% 来自煤炭。两者合计约 98%，对应的是报告所纳入站点的估算情景。</p>
+<p>报告同时考虑了站点自备电源，以及电网为新增用电负荷调度的发电机组。后者依据地区历史发电数据建模，结果会随投产时间、设备利用率和电网调度变化。在假定 9.6 吉瓦已识别算力容量全部上线、利用率为 70% 的中间情景下，报告估算 2028 年用电对应排放约为 3,200 万公吨二氧化碳当量。不同假设下的估算为 1,700 万至 3,800 万公吨。</p>
+<p>Anthropic 发言人向 Data Center Dynamics 表示，天然气可以较快上线并随用电需求调整，公司也在寻找地热、风能和太阳能机会。站点投产和实际供电组合仍会影响最终结果。</p>
+<p class="article-sources">来源：<a href="https://betterdatacenterproject.com/2026/11/16/how-ai-is-powered-a-breakdown-of-byop-and-grid-power/" rel="noopener noreferrer">Better Data Center Project 的估算报告</a> · <a href="https://www.datacenterdynamics.com/en/news/non-profit-claims-60-of-anthropics-mapped-us-data-center-power-demand-is-tied-to-natural-gas/" rel="noopener noreferrer">Data Center Dynamics 对 Anthropic 的采访</a></p>
+</article>
+
+<article data-story-id="waymo">
+<header class="article-heading"><p class="kicker">科技</p>
+<h3 class="hed l">暴雨导致 Waymo 暂停湾区叫车，次日恢复</h3>
+<p class="deck">11 月 18 日旧金山多条道路积水，有自动驾驶出租车在积水路段停驶。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">据 CBS 旧金山站报道，11 月 18 日暴雨造成旧金山多处街道积水，Waymo 暂停了旧金山湾区的叫车服务。当地居民拍到一辆自动驾驶出租车停在靠近 Panhandle 公园的 Oak 街与 Cole 街交叉口，短时妨碍通行。</p>
+<p>《旧金山纪事报》报道，Waymo 当天上午向乘客发出暂停服务的通知，湾区叫车服务于 11 月 19 日上午恢复。</p>
+<p class="article-sources">来源：<a href="https://www.cbsnews.com/sanfrancisco/news/waymo-service-pause-bay-area-storm-flooding/" rel="noopener noreferrer">CBS 旧金山站的停运报道</a> · <a href="https://www.sfchronicle.com/sf/article/waymo-resumes-service-22539972.php" rel="noopener noreferrer">《旧金山纪事报》的复运报道</a></p>
+</article>
+
+<article class="ni" data-story-id="toyota">
+<header class="article-heading"><p class="kicker">科技</p>
+<h3 class="hed s">丰田、日产和本田着手统一部分零部件标准</h3>
+<p class="deck">首批计划涉及钢材、塑料与树脂，以及线束颜色。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">据 Solidot 11 月 22 日报道，丰田、日产和本田同意推进汽车零部件标准化，以降低制造成本。三家企业计划先统一钢材质量要求、塑料和树脂技术要求，以及线束的颜色编码。</p>
+<p class="article-sources">来源：<a href="https://www.solidot.org/story?sid=85956" rel="noopener noreferrer">Solidot：丰田尼桑本田同意标准化零部件以降低成本</a></p>
+</article>
+</div>
+<footer class="foot"><span>星期时报 · 2026 年 11 月 23 日</span><span>A3</span></footer>
+</section>
+<section class="page" id="a4">
+<header class="folio"><span>2026 年 11 月 23 日　星期一</span><span>娱乐</span><span>A4</span></header>
+<div class="flow n2">
+<article data-story-id="ateez">
+<header class="article-heading"><p class="kicker">娱乐</p>
+<h2 class="hed xxl">ATEEZ 第四次登顶 Billboard 200</h2>
+<p class="deck">新专辑《GOLDEN HOUR : Part.6》是组合连续第十张进入该榜前十的专辑。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">Billboard 于美国当地时间 11 月 22 日公布，韩国组合 ATEEZ 的迷你专辑《GOLDEN HOUR : Part.6》首度上榜即排名第一。这是 ATEEZ 第四次获得 Billboard 200 冠军。</p>
+<p>据 Soompi 转引 Luminate 统计，截至 11 月 19 日的一周，这张专辑在美国录得 19.5 万个等效专辑单位，其中 19.1 万来自专辑直接销售。等效单位还计入折算后的单曲下载和流媒体播放。</p>
+<p>从 2022 年《THE WORLD EP.1 : MOVEMENT》起，ATEEZ 已连续有十张专辑进入该榜前十。Soompi 报道，这使 ATEEZ 成为 2020 年代截至当时进入前十专辑数最多的组合。</p>
+<p class="article-sources">来源：<a href="https://www.billboard.com/music/chart-beat/ateez-golden-hour-part6-no1-billboard-200-chart-1236387535/" rel="noopener noreferrer">Billboard 排行榜报道</a> · <a href="https://www.soompi.com/article/1889578wpp/ateez-scores-fourth-no-1-on-billboard-200-breaks-record-for-most-top-10s-of-any-group-this-decade" rel="noopener noreferrer">Soompi 的榜单与销量报道</a></p>
+</article>
+
+<article data-story-id="rian">
+<header class="article-heading"><p class="kicker">娱乐</p>
+<h3 class="hed l">莱恩·约翰逊谈《星球大战》：愿考虑未来合作</h3>
+<p class="deck">这位《最后的绝地武士》导演在马拉喀什国际电影节称，正在写的下一部作品与《星球大战》无关。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">据 IndieWire 报道，导演莱恩·约翰逊 11 月 22 日在马拉喀什国际电影节谈到《星球大战》。他表示正在写下一部作品，题材不属于这个系列。如果有合适机会，他愿意考虑回归。</p>
+<p>约翰逊曾执导 2017 年上映的《星球大战：最后的绝地武士》。他在对谈中说，自己仍然喜爱这个系列，也期待由不同创作者讲述新的故事。</p>
+<p class="article-sources">来源：<a href="https://www.indiewire.com/news/breaking-news/rian-johnson-star-wars-return-update-1235229946/" rel="noopener noreferrer">IndieWire: Rian Johnson Leaves the Door Open to Star Wars Return</a></p>
+</article>
+</div>
+<div class="flow band n1">
+<article class="ni" data-story-id="boxoffice">
+<header class="article-heading"><p class="kicker">娱乐</p>
+<h3 class="hed s">《饥饿游戏》新前传北美首周末票房估计 1.2 亿美元</h3>
+<p class="deck">影片在北美 4,018 家影院开画，同期全球票房估计为 2.25 亿美元。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">据 Box Office Mojo 的周日估算，狮门影业发行的《The Hunger Games: Sunrise on the Reaping》在 11 月 20 日至 22 日的北美开画周末收入约 1.2 亿美元，位列周末票房首位。同期海外票房约 1.05 亿美元。</p>
+<p class="article-sources">来源：<a href="https://www.boxofficemojo.com/release/rl2490269697/" rel="noopener noreferrer">Box Office Mojo 影片票房</a></p>
+</article>
+</div>
+<footer class="foot"><span>星期时报 · 2026 年 11 月 23 日</span><span>A4</span></footer>
+</section>
+<section class="page" id="a5">
+<header class="folio"><span>2026 年 11 月 23 日　星期一</span><span>动漫</span><span>A5</span></header>
+<div class="flow n2">
+<article data-story-id="sakamoto">
+<header class="article-heading"><p class="kicker">动漫</p>
+<h2 class="hed xxl">《SAKAMOTO DAYS》迎来完结</h2>
+<p class="deck">英语发行方 VIZ Media 于 11 月 22 日确认漫画完结。作者铃木祐斗在同日寄语中感谢六年来支持连载的读者和工作人员。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">VIZ Media 11 月 22 日发布作者寄语，确认铃木祐斗的《SAKAMOTO DAYS》迎来最终话。铃木在寄语中感谢六年来相伴的读者与工作人员。</p>
+<p>日本出版社集英社公布，最终话刊于《周刊少年Jump》2026 年第 52 号。日本电子版于 11 月 23 日发行，纸本定于 11 月 24 日发行。</p>
+<p class="article-sources">来源：<a href="https://www.viz.com/blog/posts/mangaka-musings-11-22-2026" rel="noopener noreferrer">VIZ Media 的完结公告与作者寄语</a> · <a href="https://www.shonenjump.com/j/sp_sakamoto_service/" rel="noopener noreferrer">集英社最终话与发行信息</a></p>
+</article>
+
+<article data-story-id="gondaira">
+<header class="article-heading"><p class="kicker">动漫</p>
+<h3 class="hed l">《夜樱家大作战》作者开启银座题材新连载</h3>
+<p class="deck">《Hizuki of the Ginza Patrol》首话于 11 月 22 日在 VIZ 英语平台上线。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">《夜樱家大作战》作者権平ひつじ的新作《Hizuki of the Ginza Patrol》于 11 月 22 日在 VIZ Media 英语平台发布第一话。按 MyAnimeList 的介绍，故事发生在明治时期的银座，主角是在银座后街派出所执勤的警察。</p>
+<p>権平ひつじ在 VIZ 同日发布的作者寄语中向读者问好，也邀请读者关注《夜樱家大作战》的动画。</p>
+<p class="article-sources">来源：<a href="https://www.viz.com/shonenjump/chapters/hizuki-of-the-ginza-patrol" rel="noopener noreferrer">VIZ Media 官方连载页</a> · <a href="https://www.viz.com/blog/posts/mangaka-musings-11-22-2026" rel="noopener noreferrer">VIZ Media 作者寄语</a> · <a href="https://myanimelist.net/news/74968770" rel="noopener noreferrer">MyAnimeList 新连载报道</a></p>
+</article>
+</div>
+<div class="flow band n2">
+<article class="ni" data-story-id="yasuno">
+<header class="article-heading"><p class="kicker">动漫</p>
+<h3 class="hed s">声优安野希世乃宣布结婚</h3>
+<p class="deck">代表作包括《路人女主的养成方法》加藤惠等，公告未透露配偶信息。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">2026年11月22日，声优安野希世乃在官网发布落款为当日的公告，宣布结婚，但未透露配偶具体信息（据安野希世乃オフィシャルサイト：安野希世乃からのご報告）。安野希世乃曾为《路人女主的养成方法》加藤惠、《黑色五叶草》恰米等角色配音，并于2021年随组合Walküre获第15回声优奖歌唱奖（据MyAnimeList: Singer, Voice Actress Kiyono Yasuno Announces Marriage）。</p>
+<p class="article-sources">来源：<a href="https://avex.jp/kiyono-yasuno/news/detail.php?id=1137384" rel="noopener noreferrer">安野希世乃オフィシャルサイト：安野希世乃からのご報告</a> · <a href="https://myanimelist.net/news/74968356" rel="noopener noreferrer">MyAnimeList: Singer, Voice Actress Kiyono Yasuno Announces Marriage</a></p>
+</article>
+
+<article class="ni" data-story-id="sonomono">
+<header class="article-heading"><p class="kicker">动漫</p>
+<h3 class="hed s">轻小说《その者。のちに…》2027 年推出电视动画</h3>
+<p class="deck">伊东健人配音主角瓦兹并演唱片头曲，小仓唯为梅亚尔配音。</p>
+<p class="by">本报综合</p>
+</header>
+<p class="lede">Earth Star Entertainment 于 11 月 22 日宣布，轻小说《その者。のちに…》改编的电视动画将于 2027 年播出。动画由寿门堂制作，大畑晃一任总导演。出版方尚未公布具体播出日期。</p>
+<p class="article-sources">来源：<a href="https://prtimes.jp/main/html/rd/p/000000742.000101562.html" rel="noopener noreferrer">Earth Star Entertainment 的动画化公告</a></p>
+</article>
+</div>
+<footer class="foot"><span>星期时报 · 2026 年 11 月 23 日</span><span>A5</span></footer>
+</section>
+</body></html>
